@@ -1,6 +1,5 @@
 // src/pages/InventoryDashboard.jsx
 import { useEffect, useState } from 'react';
-import Sidebar from '../components/Sidebar';
 import ProductList from '../components/ProductList';
 import StockActions from '../components/StockActions';
 import ScanBarcode from '../components/ScanBarcode';
@@ -24,37 +23,34 @@ export default function InventoryDashboard() {
   }, [refresh]);
 
   return (
-    <div className="flex min-h-screen w-full bg-gray-900 text-white">
-      <Sidebar />
-
-      <main className="flex-1 p-6 overflow-y-auto">
-        <div className="w-full px-6 space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-            <StatWidgets />
-          </div>
-
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <SalesChart />
-            <ProductCards products={products} />
-          </div>
-
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            <div className="lg:col-span-2">
-              <RequisitionList />
-            </div>
-            <RecentActivities />
-          </div>
-
-          <div className="space-y-4">
-            <ScanBarcode setRefresh={setRefresh} />
-            <StockActions setRefresh={setRefresh} />
-            <ProductList products={products} />
-          </div>
+    <main className="flex-1 p-6 overflow-y-auto text-white">
+      <div className="w-full px-6 space-y-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          <StatWidgets />
         </div>
-      </main>
-    </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <SalesChart />
+          <ProductCards products={products} />
+        </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <div className="lg:col-span-2">
+            <RequisitionList />
+          </div>
+          <RecentActivities />
+        </div>
+
+        <div className="space-y-4">
+          <ScanBarcode setRefresh={setRefresh} />
+          <StockActions setRefresh={setRefresh} />
+          <ProductList products={products} />
+        </div>
+      </div>
+    </main>
   );
 }
+
 
 
 
