@@ -15,9 +15,19 @@ export default function InventoryDashboard() {
 
   useEffect(() => {
     const fetchProducts = async () => {
-      const res = await fetch('http://localhost:8000/products');
-      const data = await res.json();
-      setProducts(data);
+      try {
+        const res = await fetch('http://localhost:8000/products');
+        if (!res.ok) {
+          console.warn('Products fetch failed:', res.status);
+          setProducts([]);
+          return;
+        }
+        const data = await res.json();
+        setProducts(data);
+      } catch (error) {
+        console.error('Error fetching products:', error);
+        setProducts([]);
+      }
     };
     fetchProducts();
   }, [refresh]);
@@ -50,6 +60,7 @@ export default function InventoryDashboard() {
     </main>
   );
 }
+
 
 
 
