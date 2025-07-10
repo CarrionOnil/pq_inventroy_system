@@ -1,8 +1,9 @@
-// src/App.jsx
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import Sidebar from './components/Sidebar';
 import InventoryDashboard from './pages/InventoryDashboard';
-import StockPage from './pages/StockPage'; // You should create this
+import StockPage from './pages/StockPage';
+import LocationsPage from './pages/Locations';
+import BarcodeScannerPage from './pages/BarcodeScannerPage'; // ✅ Added
 
 function App() {
   return (
@@ -13,7 +14,8 @@ function App() {
           <Routes>
             <Route path="/" element={<InventoryDashboard />} />
             <Route path="/stock" element={<StockPage />} />
-            {/* Add more pages here */}
+            <Route path="/locations" element={<LocationsPage />} />
+            <Route path="/barcode" element={<BarcodeScannerPage />} /> {/* ✅ New Route */}
           </Routes>
         </div>
       </div>
@@ -22,6 +24,7 @@ function App() {
 }
 
 export default App;
+
 
 
 

@@ -18,6 +18,7 @@ class StockItem(BaseModel):
     image_url: Optional[str] = None
     file_url: Optional[str] = None
 
+# Empty list to simulate in-memory DB
 fake_stock: List[StockItem] = []
 
 UPLOAD_DIR = Path("app/uploads")
@@ -97,6 +98,15 @@ async def delete_stock(item_id: int):
     if len(fake_stock) == before_len:
         raise HTTPException(status_code=404, detail="Item not found")
     return {"message": "Item deleted"}
+
+
+@router.get("/stock/barcode/{code}", response_model=StockItem)
+def get_by_barcode(code: str):
+    for item in fake_stock:
+        if item.barcode == code:
+            return item
+    raise HTTPException(status_code=404, detail="Item not found")
+
 
 
 

@@ -6,6 +6,7 @@ import {
   FaWarehouse,
   FaCogs,
   FaSignOutAlt,
+  FaBarcode,
 } from 'react-icons/fa';
 
 export default function Sidebar() {
@@ -21,7 +22,7 @@ export default function Sidebar() {
   return (
     <aside className="w-64 bg-gray-800 p-6 flex flex-col h-screen">
       {/* Brand */}
-      <div className="text-white text-2xl font-bold mb-6">B-Inventory</div>
+      <div className="text-white text-2xl font-bold mb-6">PQ-Inventory</div>
 
       {/* Navigation */}
       <nav className="flex flex-col gap-2 text-sm">
@@ -36,6 +37,9 @@ export default function Sidebar() {
         </Link>
         <Link to="/locations" className={navLinkClass('/locations')}>
           <FaWarehouse /> Locations
+        </Link>
+        <Link to="/barcode" className={navLinkClass('/barcode')}>
+          <FaBarcode /> Scan
         </Link>
         <Link to="/settings" className={navLinkClass('/settings')}>
           <FaCogs /> Settings
