@@ -1,17 +1,18 @@
 import React, { useEffect, useState } from 'react';
 import { Search, Filter, Plus, Download } from 'lucide-react';
+import AddItemForm from '../components/stockPage/AddItemForm';
+import StockSearchFilter from '../components/stockPage/StockSearchFilter';
+
 
 const StockPage = () => {
   const [stockItems, setStockItems] = useState([]);
   const [showForm, setShowForm] = useState(false);
-  const [formData, setFormData] = useState({
-    name: '',
-    partId: '',
+  const [showFilters, setShowFilters] = useState(false);
+  const [filters, setFilters] = useState({
+    query: '',
     category: '',
-    quantity: '',
+    status: '',
     location: '',
-    barcode: '',
-    status: 'In Stock',
   });
 
   const fetchStock = async () => {
@@ -27,40 +28,6 @@ const StockPage = () => {
   useEffect(() => {
     fetchStock();
   }, []);
-
-  const handleInputChange = (e) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
-  };
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    console.log("Submitting:", formData);
-
-    try {
-      await fetch('http://localhost:8000/stock', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          ...formData,
-          quantity: Number(formData.quantity),
-        }),
-      });
-      setFormData({
-        name: '',
-        partId: '',
-        category: '',
-        quantity: '',
-        location: '',
-        barcode: '',
-        status: 'In Stock',
-      });
-      setShowForm(false);
-      fetchStock();
-    } catch (err) {
-      console.error("Failed to add stock:", err);
-    }
-  };
 
   return (
     <div className="p-6 space-y-4 text-white">
@@ -89,52 +56,31 @@ const StockPage = () => {
           placeholder="Search by name, ID, or barcode"
           className="border px-4 py-2 rounded-md w-full max-w-md"
         />
-        <button className="flex items-center gap-1 px-4 py-2 border rounded-md hover:bg-gray-100">
+        <button 
+          className="flex items-center gap-1 px-4 py-2 border rounded-md hover:bg-gray-100"
+          onClick={() => setShowFilters(prev => !prev)}
+        >
           <Filter className="w-4 h-4" />
+          
+          
           Filters
         </button>
       </div>
 
-      {/* Tabs */}
-      <div className="flex gap-3">
-        {['All', 'Warehouse', 'Production', 'Low Stock', 'Incoming'].map((tab) => (
-          <button
-            key={tab}
-            className="px-4 py-2 rounded-full text-sm bg-gray-200 hover:bg-gray-300"
-          >
-            {tab}
-          </button>
-        ))}
-      </div>
+       {/* Filter Component */}
+      {showFilters && (
+        <StockSearchFilter filters={filters} setFilters={setFilters} />
+      )}
+
+
+
 
       {/* Add Item Form */}
       {showForm && (
-        <form onSubmit={handleSubmit} className="p-4 bg-gray-800 border rounded-lg space-y-4">
-          <div className="grid grid-cols-2 gap-4">
-            {Object.keys(formData).map((key) => (
-              <input
-                key={key}
-                name={key}
-                placeholder={key}
-                value={formData[key]}
-                onChange={handleInputChange}
-                className="border px-3 py-2 rounded-md text-black"
-              />
-            ))}
-          </div>
-          <div className="flex gap-4">
-            <button type="submit" className="px-4 py-2 bg-green-600 text-white rounded-md">
-              Save
-            </button>
-            <button
-              type="button"
-              onClick={() => setShowForm(false)}
-              className="px-4 py-2 border rounded-md"
-            >
-              Cancel
-            </button>
-          </div>
-        </form>
+        <AddItemForm
+          onClose={() => setShowForm(false)}
+          onSuccess={fetchStock}
+        />
       )}
 
       {/* Table */}
@@ -190,4 +136,5 @@ const StockPage = () => {
 };
 
 export default StockPage;
+
 
