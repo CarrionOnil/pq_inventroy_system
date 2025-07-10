@@ -1,32 +1,37 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useRef, useState } from 'react';
 import { Html5Qrcode } from 'html5-qrcode';
 
 export default function BarcodeScannerPage() {
   const scannerRef = useRef(null);
   const [scannedData, setScannedData] = useState(null);
   const [error, setError] = useState('');
+  const [scanning, setScanning] = useState(false);
 
-  useEffect(() => {
+  const startScanner = async () => {
     const html5QrCode = new Html5Qrcode("qr-reader");
 
-    Html5Qrcode.getCameras().then(devices => {
-      if (devices && devices.length) {
-        html5QrCode.start(
-          { facingMode: "environment" },
-          { fps: 10, qrbox: 250 },
-          async (decodedText) => {
-            html5QrCode.stop();
-            fetchItem(decodedText);
-          },
-          (err) => {
-            console.warn("Scan error:", err);
-          }
-        );
+    try {
+      const devices = await Html5Qrcode.getCameras();
+      if (!devices.length) {
+        setError("No camera available on this device.");
+        return;
       }
-    }).catch(err => setError("Camera not accessible"));
 
-    return () => html5QrCode.stop().catch(() => {});
-  }, []);
+      setScanning(true);
+      await html5QrCode.start(
+        { facingMode: "environment" },
+        { fps: 10, qrbox: 250 },
+        async (decodedText) => {
+          await html5QrCode.stop();
+          setScanning(false);
+          fetchItem(decodedText);
+        },
+        (err) => console.warn("Scan error:", err)
+      );
+    } catch (err) {
+      setError("Failed to access camera: " + err.message);
+    }
+  };
 
   const fetchItem = async (barcode) => {
     try {
@@ -42,6 +47,14 @@ export default function BarcodeScannerPage() {
   return (
     <div className="p-6 text-white">
       <h1 className="text-2xl font-bold mb-4">Scan Barcode</h1>
+      <button
+        onClick={startScanner}
+        disabled={scanning}
+        className="mb-4 px-4 py-2 bg-blue-600 rounded hover:bg-blue-700 disabled:opacity-50"
+      >
+        {scanning ? "Scanning..." : "Start Scan"}
+      </button>
+
       <div id="qr-reader" className="w-full max-w-md h-64 bg-gray-700" ref={scannerRef}></div>
 
       {scannedData && (
@@ -60,3 +73,4 @@ export default function BarcodeScannerPage() {
     </div>
   );
 }
+
