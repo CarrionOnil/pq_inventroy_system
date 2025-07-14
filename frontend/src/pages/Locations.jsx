@@ -1,5 +1,6 @@
 // frontend/src/pages/LocationsPage.jsx
 import React, { useEffect, useState } from 'react';
+import { API_BASE } from '../config';
 
 export default function LocationsPage() {
   const [locations, setLocations] = useState([]);
@@ -8,7 +9,7 @@ export default function LocationsPage() {
 
   const fetchLocations = async () => {
     try {
-      const res = await fetch('http://localhost:8000/locations');
+      const res = await fetch(`${API_BASE}/locations`);
       const data = await res.json();
       setLocations(data);
     } catch (err) {
@@ -19,7 +20,7 @@ export default function LocationsPage() {
   const handleAddLocation = async () => {
     if (!newLocation.trim()) return;
     try {
-      await fetch('http://localhost:8000/locations', {
+      await fetch(`${API_BASE}/locations`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ name: newLocation }),
@@ -36,9 +37,8 @@ export default function LocationsPage() {
   }, []);
 
   const filteredLocations = locations.filter(loc =>
-  loc.name.toLowerCase().includes(filter.toLowerCase())
-);
-
+    loc.name.toLowerCase().includes(filter.toLowerCase())
+  );
 
   return (
     <div className="p-6 text-white">

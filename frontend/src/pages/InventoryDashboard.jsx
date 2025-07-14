@@ -1,5 +1,6 @@
 // src/pages/InventoryDashboard.jsx
 import { useEffect, useState } from 'react';
+import { API_BASE } from '../config';
 import ProductList from '../components/ProductList';
 import StockActions from '../components/StockActions';
 import ScanBarcode from '../components/ScanBarcode';
@@ -16,7 +17,7 @@ export default function InventoryDashboard() {
   useEffect(() => {
     const fetchProducts = async () => {
       try {
-        const res = await fetch('http://localhost:8000/products');
+        const res = await fetch(`${API_BASE}/products`);
         if (!res.ok) {
           console.warn('Products fetch failed:', res.status);
           setProducts([]);
@@ -60,6 +61,7 @@ export default function InventoryDashboard() {
     </main>
   );
 }
+
 
 
 

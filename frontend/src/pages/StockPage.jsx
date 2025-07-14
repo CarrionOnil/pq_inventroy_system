@@ -2,6 +2,9 @@ import React, { useEffect, useState } from 'react';
 import { Search, Filter, Plus, Download } from 'lucide-react';
 import AddItemForm from '../components/stockPage/AddItemForm';
 import StockSearchFilter from '../components/stockPage/StockSearchFilter';
+import { API_BASE } from '../config';
+
+
 
 const StockPage = () => {
   const [stockItems, setStockItems] = useState([]);
@@ -15,15 +18,42 @@ const StockPage = () => {
     location: '',
   });
 
+  console.log("Fetching from 1:", `${API_BASE}/stock`);//test
+
+
   const fetchStock = async () => {
-    try {
-      const res = await fetch('http://localhost:8000/stock');
-      const data = await res.json();
-      setStockItems(data);
-    } catch (error) {
-      console.error("Failed to fetch stock:", error);
+  try {
+    console.log("API_BASE is:", API_BASE);
+    const fullUrl = `${API_BASE}/stock`;
+    console.log("Fetching from:", fullUrl);
+
+    const res = await fetch(fullUrl);
+
+    console.log("Response URL:", res.url);
+    console.log("Status:", res.status);
+    const rawText = await res.clone().text();
+    console.log("Raw response:", rawText);
+
+    const contentType = res.headers.get("content-type");
+    console.log("What is being printed", contentType);
+    if (!res.ok) {
+      throw new Error(`HTTP ${res.status}: ${rawText}`);
     }
-  };
+
+    if (!contentType || !contentType.includes("application/json")) {
+      throw new Error("Response is not JSON: " + rawText);
+    }
+
+    const data = JSON.parse(rawText);
+    console.log("Fetched stock items:", data);
+    setStockItems(data);
+  } catch (error) {
+    console.error("Failed to fetch stock:", error);
+  }
+};
+
+
+
 
   useEffect(() => {
     fetchStock();
@@ -31,7 +61,7 @@ const StockPage = () => {
 
   const handleDelete = async (id) => {
     try {
-      await fetch(`http://localhost:8000/stock/${id}`, { method: 'DELETE' });
+      await fetch(`${API_BASE}/stock/${id}`, { method: 'DELETE' });
       fetchStock();
     } catch (err) {
       console.error("Delete failed:", err);
@@ -163,6 +193,8 @@ const StockPage = () => {
 };
 
 export default StockPage;
+
+
 
 
 

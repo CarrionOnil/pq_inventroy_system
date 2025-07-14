@@ -1,5 +1,6 @@
 import React, { useRef, useState } from 'react';
 import { Html5Qrcode } from 'html5-qrcode';
+import { API_BASE } from '../config';
 
 export default function BarcodeScannerPage() {
   const scannerRef = useRef(null);
@@ -35,7 +36,7 @@ export default function BarcodeScannerPage() {
 
   const fetchItem = async (barcode) => {
     try {
-      const res = await fetch(`http://localhost:8000/stock/barcode/${barcode}`);
+      const res = await fetch(`${API_BASE}/stock/barcode/${barcode}`);
       if (!res.ok) throw new Error("Item not found");
       const data = await res.json();
       setScannedData(data);
@@ -73,4 +74,5 @@ export default function BarcodeScannerPage() {
     </div>
   );
 }
+
 

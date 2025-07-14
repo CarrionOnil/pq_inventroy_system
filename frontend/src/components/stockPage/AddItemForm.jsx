@@ -1,5 +1,7 @@
 import React, { useEffect, useState } from 'react';
 
+const API_BASE = import.meta.env.VITE_API_BASE;
+
 export default function AddItemForm({ onClose, onSuccess, initialData }) {
   const [formData, setFormData] = useState({
     name: '',
@@ -47,8 +49,8 @@ export default function AddItemForm({ onClose, onSuccess, initialData }) {
     try {
       const method = initialData ? 'PUT' : 'POST';
       const endpoint = initialData
-        ? `http://localhost:8000/stock/${initialData.id}`
-        : 'http://localhost:8000/stock';
+        ? `${API_BASE}/stock/${initialData.id}`
+        : `${API_BASE}/stock`;
 
       await fetch(endpoint, {
         method,
@@ -173,5 +175,6 @@ export default function AddItemForm({ onClose, onSuccess, initialData }) {
     </form>
   );
 }
+
 
 
