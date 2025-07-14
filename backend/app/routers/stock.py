@@ -107,6 +107,30 @@ def get_by_barcode(code: str):
             return item
     raise HTTPException(status_code=404, detail="Item not found")
 
+# /scan ENDPOINT
+@router.post("/scan", response_model=StockItem)
+async def scan_barcode(payload: dict):
+    barcode = payload.get("barcode")
+    action = payload.get("action")
+    amount = payload.get("amount", 1)
+
+    if not barcode or not action:
+        raise HTTPException(status_code=400, detail="Barcode and action are required")
+
+    for item in fake_stock:
+        if item.barcode == barcode:
+            if action == "add":
+                item.quantity += amount
+            elif action == "remove":
+                if item.quantity - amount < 0:
+                    raise HTTPException(status_code=400, detail="Quantity cannot go below zero")
+                item.quantity -= amount
+            else:
+                raise HTTPException(status_code=400, detail="Invalid action")
+            return item
+
+    raise HTTPException(status_code=404, detail="Item not found")
+
 
 
 

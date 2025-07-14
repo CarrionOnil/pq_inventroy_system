@@ -52,11 +52,6 @@ export default function InventoryDashboard() {
           <RecentActivities />
         </div>
 
-        <div className="space-y-4">
-          <ScanBarcode setRefresh={setRefresh} />
-          <StockActions setRefresh={setRefresh} />
-          <ProductList products={products} />
-        </div>
       </div>
     </main>
   );
