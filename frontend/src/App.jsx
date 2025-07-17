@@ -3,7 +3,10 @@ import Sidebar from './components/Sidebar';
 import InventoryDashboard from './pages/InventoryDashboard';
 import StockPage from './pages/StockPage';
 import LocationsPage from './pages/Locations';
-import BarcodeScannerPage from './pages/BarcodeScannerPage'; // ✅ Added
+import BarcodeScannerPage from './pages/BarcodeScannerPage'; 
+import StockLogs from './pages/StockLogs';
+// import SettingsPage from './pages/SettingsPage';
+
 
 function App() {
   return (
@@ -14,8 +17,9 @@ function App() {
           <Routes>
             <Route path="/" element={<InventoryDashboard />} />
             <Route path="/stock" element={<StockPage />} />
+            <Route path="/logs" element={<StockLogs />} />
             <Route path="/locations" element={<LocationsPage />} />
-            <Route path="/barcode" element={<BarcodeScannerPage />} /> {/* ✅ New Route */}
+            <Route path="/barcode" element={<BarcodeScannerPage />} /> 
           </Routes>
         </div>
       </div>

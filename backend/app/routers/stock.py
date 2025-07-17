@@ -3,6 +3,8 @@ from pydantic import BaseModel
 from typing import List, Optional
 from pathlib import Path
 import shutil, uuid
+from datetime import datetime
+from app.routers.logs import stock_logs, StockLog
 
 router = APIRouter()
 
@@ -99,7 +101,6 @@ async def delete_stock(item_id: int):
         raise HTTPException(status_code=404, detail="Item not found")
     return {"message": "Item deleted"}
 
-
 @router.get("/stock/barcode/{code}", response_model=StockItem)
 def get_by_barcode(code: str):
     for item in fake_stock:
@@ -127,9 +128,20 @@ async def scan_barcode(payload: dict):
                 item.quantity -= amount
             else:
                 raise HTTPException(status_code=400, detail="Invalid action")
+
+            log_entry = StockLog(
+                timestamp=datetime.utcnow(),
+                barcode=barcode,
+                action=action,
+                amount=amount,
+                resulting_qty=item.quantity
+            )
+            stock_logs.append(log_entry)
+
             return item
 
     raise HTTPException(status_code=404, detail="Item not found")
+
 
 
 
