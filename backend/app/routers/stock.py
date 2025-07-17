@@ -57,6 +57,15 @@ async def create_stock(
             shutil.copyfileobj(file.file, buf)
         item.file_url = str(pathf)
     fake_stock.append(item)
+
+    stock_logs.append(StockLog(
+        timestamp=datetime.utcnow(),
+        barcode=barcode,
+        action="created",
+        amount=quantity,
+        resulting_qty=quantity
+    ))
+
     return item
 
 @router.put("/stock/{item_id}", response_model=StockItem)
@@ -71,6 +80,12 @@ async def update_stock(
 ):
     for i, existing in enumerate(fake_stock):
         if existing.id == item_id:
+            changes = []
+            if existing.quantity != quantity:
+                changes.append(f"quantity: {existing.quantity} -> {quantity}")
+            if existing.location != location:
+                changes.append(f"location: {existing.location} -> {location}")
+
             existing.name = name
             existing.partId = partId
             existing.category = category
@@ -89,17 +104,34 @@ async def update_stock(
                     shutil.copyfileobj(file.file, buf)
                 existing.file_url = str(pathf)
             fake_stock[i] = existing
+
+            if changes:
+                stock_logs.append(StockLog(
+                    timestamp=datetime.utcnow(),
+                    barcode=barcode,
+                    action="updated: " + ", ".join(changes),
+                    amount=0,
+                    resulting_qty=quantity
+                ))
+
             return existing
     raise HTTPException(status_code=404, detail="Item not found")
 
 @router.delete("/stock/{item_id}")
 async def delete_stock(item_id: int):
     global fake_stock
-    before_len = len(fake_stock)
-    fake_stock = [item for item in fake_stock if item.id != item_id]
-    if len(fake_stock) == before_len:
-        raise HTTPException(status_code=404, detail="Item not found")
-    return {"message": "Item deleted"}
+    for item in fake_stock:
+        if item.id == item_id:
+            fake_stock.remove(item)
+            stock_logs.append(StockLog(
+                timestamp=datetime.utcnow(),
+                barcode=item.barcode,
+                action=f"deleted {item.name}",
+                amount=0,
+                resulting_qty=0
+            ))
+            return {"message": "Item deleted"}
+    raise HTTPException(status_code=404, detail="Item not found")
 
 @router.get("/stock/barcode/{code}", response_model=StockItem)
 def get_by_barcode(code: str):
@@ -108,7 +140,6 @@ def get_by_barcode(code: str):
             return item
     raise HTTPException(status_code=404, detail="Item not found")
 
-# /scan ENDPOINT
 @router.post("/scan", response_model=StockItem)
 async def scan_barcode(payload: dict):
     barcode = payload.get("barcode")
@@ -141,6 +172,7 @@ async def scan_barcode(payload: dict):
             return item
 
     raise HTTPException(status_code=404, detail="Item not found")
+
 
 
 
