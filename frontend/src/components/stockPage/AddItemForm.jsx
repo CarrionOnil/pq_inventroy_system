@@ -15,6 +15,22 @@ export default function AddItemForm({ onClose, onSuccess, initialData }) {
     file: null,
   });
 
+  const [locations, setLocations] = useState([]);
+
+  useEffect(() => {
+    // Fetch available locations
+    const fetchLocations = async () => {
+      try {
+        const res = await fetch(`${API_BASE}/locations`);
+        const data = await res.json();
+        setLocations(data);
+      } catch (err) {
+        console.error("Failed to fetch locations:", err);
+      }
+    };
+    fetchLocations();
+  }, []);
+
   useEffect(() => {
     if (initialData) {
       setFormData((prev) => ({
@@ -57,8 +73,8 @@ export default function AddItemForm({ onClose, onSuccess, initialData }) {
         body: payload,
       });
 
-      onSuccess(); // refresh data
-      onClose();   // close form
+      onSuccess();
+      onClose();
     } catch (err) {
       console.error("Failed to submit stock item:", err);
     }
@@ -96,13 +112,20 @@ export default function AddItemForm({ onClose, onSuccess, initialData }) {
           onChange={handleInputChange}
           className="border px-3 py-2 rounded-md text-black"
         />
-        <input
+        <select
           name="location"
-          placeholder="Location"
           value={formData.location}
           onChange={handleInputChange}
+          required
           className="border px-3 py-2 rounded-md text-black"
-        />
+        >
+          <option value="">Select Location</option>
+          {locations.map((loc) => (
+            <option key={loc.id} value={loc.name}>
+              {loc.name}
+            </option>
+          ))}
+        </select>
         <input
           name="barcode"
           placeholder="Barcode"
@@ -121,7 +144,6 @@ export default function AddItemForm({ onClose, onSuccess, initialData }) {
           <option value="Out of Stock">Out of Stock</option>
         </select>
 
-        {/* Image Upload */}
         <div className="col-span-1">
           <label className="text-sm text-white mb-1 block">Item Image</label>
           <input
@@ -140,7 +162,6 @@ export default function AddItemForm({ onClose, onSuccess, initialData }) {
           )}
         </div>
 
-        {/* File Upload */}
         <div className="col-span-1">
           <label className="text-sm text-white mb-1 block">Attachment (PDF)</label>
           <input
@@ -156,7 +177,6 @@ export default function AddItemForm({ onClose, onSuccess, initialData }) {
         </div>
       </div>
 
-      {/* Action Buttons */}
       <div className="flex gap-4 mt-4">
         <button
           type="submit"
@@ -175,6 +195,7 @@ export default function AddItemForm({ onClose, onSuccess, initialData }) {
     </form>
   );
 }
+
 
 
 

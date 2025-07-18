@@ -1,6 +1,23 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
+
+const API_BASE = import.meta.env.VITE_API_BASE;
 
 export default function StockFilter({ filters, setFilters }) {
+  const [locations, setLocations] = useState([]);
+
+  useEffect(() => {
+    const fetchLocations = async () => {
+      try {
+        const res = await fetch(`${API_BASE}/locations`);
+        const data = await res.json();
+        setLocations(data);
+      } catch (err) {
+        console.error('Failed to fetch locations:', err);
+      }
+    };
+    fetchLocations();
+  }, []);
+
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFilters((prev) => ({ ...prev, [name]: value }));
@@ -8,7 +25,6 @@ export default function StockFilter({ filters, setFilters }) {
 
   return (
     <div className="flex flex-wrap gap-3 items-center mb-4">
- 
       <select
         name="category"
         value={filters.category}
@@ -37,10 +53,14 @@ export default function StockFilter({ filters, setFilters }) {
         className="border px-4 py-2 rounded-md text-black"
       >
         <option value="">All Locations</option>
-        <option value="Warehouse A">Warehouse A</option>
-        <option value="Production">Production</option>
+        {locations.map((loc) => (
+          <option key={loc.id} value={loc.name}>
+            {loc.name}
+          </option>
+        ))}
       </select>
     </div>
   );
 }
+
 
