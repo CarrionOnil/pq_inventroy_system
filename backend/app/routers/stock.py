@@ -49,19 +49,18 @@ async def create_stock(
         quantity=quantity, location=location, barcode=barcode,
         status=status, cost=cost, description=description
     )
-    # Handle image
+
     if image:
         path = UPLOAD_DIR / "images" / f"{uuid.uuid4()}_{image.filename}"
         with path.open("wb") as buffer:
             shutil.copyfileobj(image.file, buffer)
-        item.image_url = str(path)
+        item.image_url = f"/static/images/{path.name}"
 
-    # Handle file
     if file:
         pathf = UPLOAD_DIR / "files" / f"{uuid.uuid4()}_{file.filename}"
         with pathf.open("wb") as buf:
             shutil.copyfileobj(file.file, buf)
-        item.file_url = str(pathf)
+        item.file_url = f"/static/files/{pathf.name}"
 
     fake_stock.append(item)
 
@@ -109,13 +108,13 @@ async def update_stock(
                 path = UPLOAD_DIR / "images" / f"{uuid.uuid4()}_{image.filename}"
                 with path.open("wb") as buffer:
                     shutil.copyfileobj(image.file, buffer)
-                existing.image_url = str(path)
+                existing.image_url = f"/static/images/{path.name}"
 
             if file:
                 pathf = UPLOAD_DIR / "files" / f"{uuid.uuid4()}_{file.filename}"
                 with pathf.open("wb") as buf:
                     shutil.copyfileobj(file.file, buf)
-                existing.file_url = str(pathf)
+                existing.file_url = f"/static/files/{pathf.name}"
 
             fake_stock[i] = existing
 
@@ -184,10 +183,3 @@ async def scan_barcode(payload: dict):
             return item
 
     raise HTTPException(status_code=404, detail="Item not found")
-
-
-
-
-
-
-

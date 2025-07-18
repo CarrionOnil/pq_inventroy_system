@@ -1,7 +1,8 @@
 // src/components/stockPage/StockItemPopup.jsx
 import React from 'react';
+import { API_BASE } from '../../config';
 
-export default function StockItemPopup({ item, onClose }) {
+export default function StockItemPopup({ item, onClose, onEdit, onDelete }) {
   if (!item) return null;
 
   return (
@@ -15,7 +16,7 @@ export default function StockItemPopup({ item, onClose }) {
         </button>
         <div className="flex gap-4">
           <img
-            src={item.image_url || '/placeholder.png'}
+            src={`${API_BASE}${item.image_url}` || '/placeholder.png'}
             alt={item.name}
             className="w-32 h-32 object-cover rounded"
           />
@@ -42,8 +43,24 @@ export default function StockItemPopup({ item, onClose }) {
               </p>
             )}
             <div className="flex gap-4 pt-4">
-              <button className="px-4 py-2 bg-blue-600 text-white rounded-md">Edit</button>
-              <button className="px-4 py-2 bg-red-600 text-white rounded-md">Delete</button>
+              <button
+                onClick={() => {
+                  onEdit(item);
+                  onClose();
+                }}
+                className="px-4 py-2 bg-blue-600 text-white rounded-md"
+              >
+                Edit
+              </button>
+              <button
+                onClick={() => {
+                  onDelete(item.id);
+                  onClose();
+                }}
+                className="px-4 py-2 bg-red-600 text-white rounded-md"
+              >
+                Delete
+              </button>
             </div>
           </div>
         </div>

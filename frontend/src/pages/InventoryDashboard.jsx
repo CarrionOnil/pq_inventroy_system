@@ -17,7 +17,7 @@ export default function InventoryDashboard() {
   useEffect(() => {
     const fetchProducts = async () => {
       try {
-        const res = await fetch(`${API_BASE}/products`);
+        const res = await fetch(`${API_BASE}/stock`);
         if (!res.ok) {
           console.warn('Products fetch failed:', res.status);
           setProducts([]);

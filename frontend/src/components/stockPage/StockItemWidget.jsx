@@ -1,5 +1,6 @@
 // src/components/stockPage/StockItemWidget.jsx
 import React from 'react';
+import { API_BASE } from '../../config';
 
 export default function StockItemWidget({ item, onClick }) {
   return (
@@ -7,11 +8,12 @@ export default function StockItemWidget({ item, onClick }) {
       className="cursor-pointer bg-white text-black rounded-lg shadow hover:shadow-md flex overflow-hidden"
       onClick={() => onClick(item)}
     >
-      <img
-        src={item.image_url || '/placeholder.png'}
+    <img
+        src={`${API_BASE}${item.image_url}` || '/placeholder.png'}
         alt={item.name}
         className="w-24 h-24 object-cover"
-      />
+        onError={(e) => { e.target.src = '/placeholder.png'; }}
+    />
       <div className="flex flex-col justify-center px-4 py-2 flex-grow">
         <p className="text-lg font-semibold">{item.name}</p>
         <p className="text-sm text-gray-600">Part ID: {item.partId}</p>

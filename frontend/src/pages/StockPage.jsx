@@ -131,6 +131,8 @@ const StockPage = () => {
         <StockItemPopup
           item={popupItem}
           onClose={() => setPopupItem(null)}
+          onEdit={handleEdit}
+          onDelete={handleDelete}
         />
       )}
     </div>
