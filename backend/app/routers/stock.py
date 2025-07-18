@@ -19,8 +19,9 @@ class StockItem(BaseModel):
     status: str
     image_url: Optional[str] = None
     file_url: Optional[str] = None
+    cost: Optional[float] = 0.0
+    description: Optional[str] = ""
 
-# Empty list to simulate in-memory DB
 fake_stock: List[StockItem] = []
 
 UPLOAD_DIR = Path("app/uploads")
@@ -37,6 +38,8 @@ async def create_stock(
     category: str = Form(...), quantity: int = Form(...),
     location: str = Form(...), barcode: str = Form(...),
     status: str = Form(...),
+    cost: Optional[float] = Form(0.0),
+    description: Optional[str] = Form(""),
     image: Optional[UploadFile] = File(None),
     file: Optional[UploadFile] = File(None)
 ):
@@ -44,18 +47,22 @@ async def create_stock(
     item = StockItem(
         id=new_id, name=name, partId=partId, category=category,
         quantity=quantity, location=location, barcode=barcode,
-        status=status
+        status=status, cost=cost, description=description
     )
+    # Handle image
     if image:
         path = UPLOAD_DIR / "images" / f"{uuid.uuid4()}_{image.filename}"
         with path.open("wb") as buffer:
             shutil.copyfileobj(image.file, buffer)
         item.image_url = str(path)
+
+    # Handle file
     if file:
         pathf = UPLOAD_DIR / "files" / f"{uuid.uuid4()}_{file.filename}"
         with pathf.open("wb") as buf:
             shutil.copyfileobj(file.file, buf)
         item.file_url = str(pathf)
+
     fake_stock.append(item)
 
     stock_logs.append(StockLog(
@@ -75,6 +82,8 @@ async def update_stock(
     category: str = Form(...), quantity: int = Form(...),
     location: str = Form(...), barcode: str = Form(...),
     status: str = Form(...),
+    cost: Optional[float] = Form(0.0),
+    description: Optional[str] = Form(""),
     image: Optional[UploadFile] = File(None),
     file: Optional[UploadFile] = File(None)
 ):
@@ -93,16 +102,21 @@ async def update_stock(
             existing.location = location
             existing.barcode = barcode
             existing.status = status
+            existing.cost = cost
+            existing.description = description
+
             if image:
                 path = UPLOAD_DIR / "images" / f"{uuid.uuid4()}_{image.filename}"
                 with path.open("wb") as buffer:
                     shutil.copyfileobj(image.file, buffer)
                 existing.image_url = str(path)
+
             if file:
                 pathf = UPLOAD_DIR / "files" / f"{uuid.uuid4()}_{file.filename}"
                 with pathf.open("wb") as buf:
                     shutil.copyfileobj(file.file, buf)
                 existing.file_url = str(pathf)
+
             fake_stock[i] = existing
 
             if changes:
@@ -160,18 +174,17 @@ async def scan_barcode(payload: dict):
             else:
                 raise HTTPException(status_code=400, detail="Invalid action")
 
-            log_entry = StockLog(
+            stock_logs.append(StockLog(
                 timestamp=datetime.utcnow(),
                 barcode=barcode,
                 action=action,
                 amount=amount,
                 resulting_qty=item.quantity
-            )
-            stock_logs.append(log_entry)
-
+            ))
             return item
 
     raise HTTPException(status_code=404, detail="Item not found")
+
 
 
 

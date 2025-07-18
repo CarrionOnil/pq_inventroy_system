@@ -11,6 +11,8 @@ export default function AddItemForm({ onClose, onSuccess, initialData }) {
     location: '',
     barcode: '',
     status: 'In Stock',
+    cost: '',
+    description: '',
     image: null,
     file: null,
   });
@@ -126,6 +128,16 @@ export default function AddItemForm({ onClose, onSuccess, initialData }) {
             </option>
           ))}
         </select>
+        
+        <input
+            name="cost"
+            type="number"
+            placeholder="Cost to Make"
+            value={formData.cost}
+            onChange={handleInputChange}
+            className="border px-3 py-2 rounded-md text-black"
+          />
+
         <input
           name="barcode"
           placeholder="Barcode"
@@ -133,6 +145,15 @@ export default function AddItemForm({ onClose, onSuccess, initialData }) {
           onChange={handleInputChange}
           className="border px-3 py-2 rounded-md text-black"
         />
+        
+         <textarea
+            name="description"
+            placeholder="Description"
+            value={formData.description}
+            onChange={handleInputChange}
+            className="border px-3 py-2 rounded-md text-black col-span-2"
+          />
+
         <select
           name="status"
           value={formData.status}
