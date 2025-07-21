@@ -1,11 +1,15 @@
 // frontend/src/pages/LocationsPage.jsx
 import React, { useEffect, useState } from 'react';
 import { API_BASE } from '../config';
+import AddLocForm from '../components/LocPage/AddLocForm';
+
+
 
 export default function LocationsPage() {
   const [locations, setLocations] = useState([]);
   const [newLocation, setNewLocation] = useState('');
   const [filter, setFilter] = useState('');
+  const [showForm, setShowForm] = useState(false);
 
   const fetchLocations = async () => {
     try {
@@ -52,13 +56,25 @@ export default function LocationsPage() {
             onChange={(e) => setNewLocation(e.target.value)}
           />
           <button
-            onClick={handleAddLocation}
+            onClick={() => {
+              handleAddLocation();
+              setShowForm(true);
+            }}
             className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700"
           >
             + New
           </button>
         </div>
       </div>
+
+      {showForm && (
+              <AddLocForm
+                onClose={() => {
+                  setShowForm(false);
+                }}
+                onSuccess={fetchLocations}
+              />
+            )}
 
       <div className="mb-4 flex justify-between items-center">
         <input
