@@ -1,15 +1,12 @@
-// frontend/src/pages/LocationsPage.jsx
 import React, { useEffect, useState } from 'react';
 import { API_BASE } from '../config';
 import AddLocForm from '../components/LocPage/AddLocForm';
 
-
-
 export default function LocationsPage() {
   const [locations, setLocations] = useState([]);
-  const [newLocation, setNewLocation] = useState('');
   const [filter, setFilter] = useState('');
   const [showForm, setShowForm] = useState(false);
+  const [selectedLocation, setSelectedLocation] = useState(null);
 
   const fetchLocations = async () => {
     try {
@@ -21,21 +18,6 @@ export default function LocationsPage() {
     }
   };
 
-  const handleAddLocation = async () => {
-    if (!newLocation.trim()) return;
-    try {
-      await fetch(`${API_BASE}/locations`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name: newLocation }),
-      });
-      setNewLocation('');
-      fetchLocations();
-    } catch (err) {
-      console.error('Failed to add location:', err);
-    }
-  };
-
   useEffect(() => {
     fetchLocations();
   }, []);
@@ -44,42 +26,28 @@ export default function LocationsPage() {
     loc.name.toLowerCase().includes(filter.toLowerCase())
   );
 
+  const handleDelete = async (id) => {
+    try {
+      await fetch(`${API_BASE}/locations/${id}`, { method: 'DELETE' });
+      fetchLocations();
+    } catch (err) {
+      console.error('Delete failed:', err);
+    }
+  };
+
   return (
     <div className="p-6 text-white">
       <div className="flex justify-between items-center mb-4">
         <h1 className="text-2xl font-bold">Locations</h1>
-        <div className="flex gap-2">
-          <input
-            className="border px-3 py-2 rounded-md text-black"
-            placeholder="New Location"
-            value={newLocation}
-            onChange={(e) => setNewLocation(e.target.value)}
-          />
-          <button
-            onClick={() => {
-              handleAddLocation();
-              setShowForm(true);
-            }}
-            className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700"
-          >
-            + New
-          </button>
-        </div>
+        <button onClick={() => { setSelectedLocation(null); setShowForm(true); }} className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700">
+          + New
+        </button>
       </div>
 
-      {showForm && (
-              <AddLocForm
-                onClose={() => {
-                  setShowForm(false);
-                }}
-                onSuccess={fetchLocations}
-              />
-            )}
-
-      <div className="mb-4 flex justify-between items-center">
+      <div className="mb-4">
         <input
           className="border px-3 py-2 rounded-md text-black"
-          placeholder="Filter..."
+          placeholder="Search Location Name..."
           value={filter}
           onChange={(e) => setFilter(e.target.value)}
         />
@@ -89,29 +57,40 @@ export default function LocationsPage() {
         <thead className="bg-gray-100">
           <tr>
             <th className="text-left px-4 py-2">Location</th>
-            <th className="text-left px-4 py-2">Location Type</th>
-            <th className="text-left px-4 py-2">Storage Category</th>
+            <th className="text-left px-4 py-2">Type</th>
+            <th className="text-left px-4 py-2">Storage</th>
             <th className="text-left px-4 py-2">Company</th>
+            <th className="text-left px-4 py-2">Actions</th>
           </tr>
         </thead>
         <tbody>
-          {filteredLocations.map((loc, idx) => (
-            <tr key={idx} className="border-t">
+          {filteredLocations.map((loc) => (
+            <tr key={loc.id} className="border-t">
               <td className="px-4 py-2">{loc.name}</td>
-              <td className="px-4 py-2">Internal Location</td>
-              <td className="px-4 py-2">-</td>
-              <td className="px-4 py-2">My Company</td>
+              <td className="px-4 py-2">{loc.locationType}</td>
+              <td className="px-4 py-2">{loc.storageCategory || '-'}</td>
+              <td className="px-4 py-2">{loc.company}</td>
+              <td className="px-4 py-2">
+                <button onClick={() => { setSelectedLocation(loc); setShowForm(true); }} className="text-blue-600 hover:underline mr-2">Edit</button>
+                <button onClick={() => handleDelete(loc.id)} className="text-red-600 hover:underline">Delete</button>
+              </td>
             </tr>
           ))}
           {filteredLocations.length === 0 && (
             <tr>
-              <td className="px-4 py-2 text-center text-gray-400" colSpan={4}>
-                No locations found.
-              </td>
+              <td colSpan={5} className="text-center text-gray-400 px-4 py-2">No locations found.</td>
             </tr>
           )}
         </tbody>
       </table>
+
+      {showForm && (
+        <AddLocForm
+          onClose={() => setShowForm(false)}
+          onSuccess={fetchLocations}
+          initialData={selectedLocation}
+        />
+      )}
     </div>
   );
 }
