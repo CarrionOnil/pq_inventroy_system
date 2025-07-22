@@ -41,6 +41,9 @@ export default function Sidebar() {
         <Link to="/barcode" className={navLinkClass('/barcode')}>
           <FaBarcode /> Scan
         </Link>
+        <Link to="/assemble" className={navLinkClass('/assemble')}>
+            🔩 Assemble
+        </Link>
         <Link to="/settings" className={navLinkClass('/settings')}>
           <FaCogs /> Settings
         </Link>
@@ -58,5 +61,3 @@ export default function Sidebar() {
     </aside>
   );
 }
-
-

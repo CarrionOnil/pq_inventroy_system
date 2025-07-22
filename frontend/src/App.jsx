@@ -5,8 +5,8 @@ import StockPage from './pages/StockPage';
 import LocationsPage from './pages/Locations';
 import BarcodeScannerPage from './pages/BarcodeScannerPage'; 
 import StockLogs from './pages/StockLogs';
+import AssemblyPage from './pages/AssemblyPage'; // ✅ New import
 // import SettingsPage from './pages/SettingsPage';
-
 
 function App() {
   return (
@@ -20,6 +20,7 @@ function App() {
             <Route path="/logs" element={<StockLogs />} />
             <Route path="/locations" element={<LocationsPage />} />
             <Route path="/barcode" element={<BarcodeScannerPage />} /> 
+            <Route path="/assemble" element={<AssemblyPage />} /> {/* ✅ New Route */}
           </Routes>
         </div>
       </div>
@@ -28,7 +29,3 @@ function App() {
 }
 
 export default App;
-
-
-
-
