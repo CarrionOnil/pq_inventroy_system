@@ -29,8 +29,15 @@ UPLOAD_DIR = Path("app/uploads")
 (UPLOAD_DIR / "files").mkdir(parents=True, exist_ok=True)
 
 @router.get("/stock", response_model=List[StockItem])
-def get_stock():
-    return fake_stock
+def get_stock(location: Optional[str] = None, category: Optional[str] = None, status: Optional[str] = None):
+    result = fake_stock
+    if location:
+        result = [item for item in result if item.location == location]
+    if category:
+        result = [item for item in result if item.category == category]
+    if status:
+        result = [item for item in result if item.status == status]
+    return result
 
 @router.post("/stock", response_model=StockItem)
 async def create_stock(
@@ -177,6 +184,35 @@ async def scan_barcode(payload: dict):
                 timestamp=datetime.utcnow(),
                 barcode=barcode,
                 action=action,
+                amount=amount,
+                resulting_qty=item.quantity
+            ))
+            return item
+
+    raise HTTPException(status_code=404, detail="Item not found")
+
+@router.post("/stock/adjust")
+async def adjust_existing_stock(payload: dict):
+    partId = payload.get("partId")
+    amount = payload.get("amount")
+    mode = payload.get("mode")  # 'add' or 'remove'
+
+    if not partId or amount is None or mode not in ["add", "remove"]:
+        raise HTTPException(status_code=400, detail="partId, amount, and valid mode are required")
+
+    for item in fake_stock:
+        if item.partId == partId:
+            if mode == "add":
+                item.quantity += amount
+            else:
+                if item.quantity - amount < 0:
+                    raise HTTPException(status_code=400, detail="Cannot reduce below zero")
+                item.quantity -= amount
+
+            stock_logs.append(StockLog(
+                timestamp=datetime.utcnow(),
+                barcode=item.barcode,
+                action=f"adjusted {mode}",
                 amount=amount,
                 resulting_qty=item.quantity
             ))

@@ -21,7 +21,12 @@ const StockPage = () => {
 
   const fetchStock = async () => {
     try {
-      const fullUrl = `${API_BASE}/stock`;
+      const params = new URLSearchParams();
+      if (filters.location) params.append('location', filters.location);
+      if (filters.category) params.append('category', filters.category);
+      if (filters.status) params.append('status', filters.status);
+
+      const fullUrl = `${API_BASE}/stock?${params.toString()}`;
       const res = await fetch(fullUrl);
       const rawText = await res.clone().text();
       const contentType = res.headers.get("content-type");
@@ -41,9 +46,10 @@ const StockPage = () => {
     }
   };
 
+  // Refetch when filters change
   useEffect(() => {
     fetchStock();
-  }, []);
+  }, [filters]);
 
   const handleDelete = async (id) => {
     try {
@@ -88,10 +94,14 @@ const StockPage = () => {
           type="text"
           placeholder="Search by name, ID, or barcode"
           className="border px-4 py-2 rounded-md w-full max-w-md text-black"
+          value={filters.query}
+          onChange={(e) =>
+            setFilters((prev) => ({ ...prev, query: e.target.value }))
+          }
         />
         <button 
           className="flex items-center gap-1 px-4 py-2 border rounded-md hover:bg-gray-100"
-          onClick={() => setShowFilters(prev => !prev)}
+          onClick={() => setShowFilters((prev) => !prev)}
         >
           <Filter className="w-4 h-4" />
           Filters
@@ -115,7 +125,7 @@ const StockPage = () => {
         />
       )}
 
-      {/* Widgets */}
+      {/* Stock Items */}
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
         {stockItems.length > 0 ? (
           stockItems.map(item => (
@@ -126,7 +136,7 @@ const StockPage = () => {
         )}
       </div>
 
-      {/* Popup */}
+      {/* Popup for Details */}
       {popupItem && (
         <StockItemPopup
           item={popupItem}
@@ -140,9 +150,3 @@ const StockPage = () => {
 };
 
 export default StockPage;
-
-
-
-
-
-
