@@ -9,10 +9,10 @@ export default function StockItemWidget({ item, onClick }) {
       onClick={() => onClick(item)}
     >
     <img
-        src={`${API_BASE}${item.image_url}` || '/placeholder.png'}
+        src={`${API_BASE}${item.image_url}`}
         alt={item.name}
         className="w-24 h-24 object-cover"
-        onError={(e) => { e.target.src = '/placeholder.png'; }}
+        onError={(e) => { e.target.style.display = 'none'; }}
     />
       <div className="flex flex-col justify-center px-4 py-2 flex-grow">
         <p className="text-lg font-semibold">{item.name}</p>
