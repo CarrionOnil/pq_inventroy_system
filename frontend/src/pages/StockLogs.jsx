@@ -18,6 +18,41 @@ export default function StockLogsPage() {
     fetchLogs();
   }, []);
 
+  function formatLogDetails(action, details) {
+    if (!details || typeof details !== 'object') return '-';
+
+    if (action === 'consume' && details.used_for) {
+      return `Used to assemble ${details.used_for}`;
+    }
+
+    if (action === 'assemble' && details.components) {
+      const parts = Object.entries(details.components).map(
+        ([code, qty]) => `${qty} × ${code}`
+      );
+      return `Assembled from: ${parts.join(', ')}`;
+    }
+
+    if (action === 'bom_create' || action === 'bom_update') {
+      const parts = Object.entries(details.components || {}).map(
+        ([code, qty]) => `${qty} × ${code}`
+      );
+      return `BOM: ${parts.join(', ')}`;
+    }
+
+    // Default: print field-level diffs
+    const diffs = Object.entries(details).map(([key, val]) => {
+      if (Array.isArray(val) && val.length === 2 && typeof val[0] !== 'object') {
+        return `${key}: ${val[0]} → ${val[1]}`;
+      }
+      if (typeof val === 'object') {
+        return `${key}: ${Object.entries(val).map(([k, v]) => `${k} × ${v}`).join(', ')}`;
+      }
+      return `${key}: ${String(val)}`;
+    });
+
+    return diffs.length ? diffs.join(' | ') : '-';
+  }
+
   return (
     <div className="p-6 text-white">
       <h1 className="text-2xl font-bold mb-4">Stock Activity Log</h1>
@@ -35,27 +70,15 @@ export default function StockLogsPage() {
             </tr>
           </thead>
           <tbody>
-            {logs.map(log => (
-              <tr key={log.id} className="border-t">
-                <td className="px-4 py-2">{log.id}</td>
+            {logs.map((log, index) => (
+              <tr key={index} className="border-t">
+                <td className="px-4 py-2">{index + 1}</td>
                 <td className="px-4 py-2">{new Date(log.timestamp).toLocaleString()}</td>
                 <td className="px-4 py-2 capitalize">{log.action}</td>
                 <td className="px-4 py-2">{log.barcode || '-'}</td>
                 <td className="px-4 py-2">{log.amount ?? '-'}</td>
                 <td className="px-4 py-2">{log.resulting_qty ?? '-'}</td>
-                <td className="px-4 py-2">
-                  {log.changed_fields?.length > 0 ? (
-                    <ul className="list-disc pl-4">
-                      {log.changed_fields.map((f, i) => (
-                        <li key={i}>{f}</li>
-                      ))}
-                    </ul>
-                  ) : log.deleted_info ? (
-                    `Deleted: ${log.deleted_info}`
-                  ) : (
-                    '-'
-                  )}
-                </td>
+                <td className="px-4 py-2">{formatLogDetails(log.action, log.details)}</td>
               </tr>
             ))}
             {logs.length === 0 && (
