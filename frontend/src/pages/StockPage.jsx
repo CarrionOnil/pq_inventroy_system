@@ -3,13 +3,15 @@ import { Search, Filter, Plus, Download } from 'lucide-react';
 import AddItemForm from '../components/stockPage/AddItemForm';
 import StockSearchFilter from '../components/stockPage/StockSearchFilter';
 import StockItemWidget from '../components/stockPage/StockItemWidget';
+import ItemDetailsModal from '../components/stockPage/ItemDetailsModal';
 
 const StockPage = () => {
   const [stockItems, setStockItems] = useState([]);
   const [showForm, setShowForm] = useState(false);
   const [editItem, setEditItem] = useState(null);
+  const [viewItem, setViewItem] = useState(null);
   const [showFilters, setShowFilters] = useState(false);
-  const [columns, setColumns] = useState(4); // Default to 4 per row
+  const [columns, setColumns] = useState(4);
 
   const [filters, setFilters] = useState({
     query: '',
@@ -53,6 +55,10 @@ const StockPage = () => {
   const handleEdit = (item) => {
     setEditItem(item);
     setShowForm(true);
+  };
+
+  const handleView = (item) => {
+    setViewItem(item);
   };
 
   return (
@@ -122,10 +128,23 @@ const StockPage = () => {
         />
       )}
 
+      {/* Modal for viewing item details */}
+      {viewItem && (
+        <ItemDetailsModal
+          isOpen={!!viewItem}
+          item={viewItem}
+          onClose={() => setViewItem(null)}
+        />
+      )}
+
       {/* Grid Widget Layout */}
       <div className={`grid ${columnClass} gap-6`}>
         {stockItems.map((item) => (
-          <StockItemWidget key={item.id} item={item} onClick={handleEdit} />
+          <StockItemWidget
+            key={item.id}
+            item={item}
+            onClick={() => handleView(item)}
+          />
         ))}
         {stockItems.length === 0 && (
           <p className="text-gray-400 text-center col-span-full">No stock items found.</p>
