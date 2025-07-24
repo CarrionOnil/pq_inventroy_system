@@ -49,15 +49,7 @@ export default function Sidebar() {
         </Link>
       </nav>
 
-      {/* Footer Actions */}
-      <div className="mt-auto pt-6 border-t border-gray-700">
-        <a
-          href="#"
-          className="flex items-center gap-3 text-red-400 hover:text-white transition"
-        >
-          <FaSignOutAlt /> Logout
-        </a>
-      </div>
+
     </aside>
   );
 }

@@ -50,12 +50,13 @@ async def create_stock(
         path = UPLOAD_DIR / "images" / f"{uuid.uuid4()}_{image.filename}"
         with path.open("wb") as buffer:
             shutil.copyfileobj(image.file, buffer)
-        item.image_url = str(path)
+        item.image_url = f"/static/images/{path.name}"  # ✅ Public path for frontend
+
     if file:
         pathf = UPLOAD_DIR / "files" / f"{uuid.uuid4()}_{file.filename}"
         with pathf.open("wb") as buf:
             shutil.copyfileobj(file.file, buf)
-        item.file_url = str(pathf)
+        item.file_url = f"/static/files/{pathf.name}"  # ✅ Public path for frontend
 
     bom = next((b for b in boms if b.product_barcode == barcode), None)
     if bom:
@@ -90,6 +91,9 @@ async def create_stock(
 @router.delete("/stock/{item_id}")
 async def delete_stock(item_id: int):
     global fake_stock
+    print("Attempting to delete item ID:", item_id)
+    print("Available item IDs:", [i.id for i in fake_stock])
+
     for item in fake_stock:
         if item.id == item_id:
             fake_stock = [i for i in fake_stock if i.id != item_id]

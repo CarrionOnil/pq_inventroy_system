@@ -3,15 +3,14 @@ import { Search, Filter, Plus, Download } from 'lucide-react';
 import AddItemForm from '../components/stockPage/AddItemForm';
 import StockSearchFilter from '../components/stockPage/StockSearchFilter';
 import StockItemWidget from '../components/stockPage/StockItemWidget';
-import StockItemPopup from '../components/stockPage/StockItemPopup';
-import { API_BASE } from '../config';
 
 const StockPage = () => {
   const [stockItems, setStockItems] = useState([]);
   const [showForm, setShowForm] = useState(false);
   const [editItem, setEditItem] = useState(null);
-  const [popupItem, setPopupItem] = useState(null);
   const [showFilters, setShowFilters] = useState(false);
+  const [columns, setColumns] = useState(4); // Default to 4 per row
+
   const [filters, setFilters] = useState({
     query: '',
     category: '',
@@ -19,41 +18,32 @@ const StockPage = () => {
     location: '',
   });
 
+  const columnClassMap = {
+    3: 'grid-cols-3',
+    4: 'grid-cols-4',
+    5: 'grid-cols-5',
+    6: 'grid-cols-6',
+    7: 'grid-cols-7',
+  };
+  const columnClass = columnClassMap[columns] || 'grid-cols-4';
+
   const fetchStock = async () => {
     try {
-      const params = new URLSearchParams();
-      if (filters.location) params.append('location', filters.location);
-      if (filters.category) params.append('category', filters.category);
-      if (filters.status) params.append('status', filters.status);
-
-      const fullUrl = `${API_BASE}/stock?${params.toString()}`;
-      const res = await fetch(fullUrl);
-      const rawText = await res.clone().text();
-      const contentType = res.headers.get("content-type");
-
-      if (!res.ok) {
-        throw new Error(`HTTP ${res.status}: ${rawText}`);
-      }
-
-      if (!contentType || !contentType.includes("application/json")) {
-        throw new Error("Response is not JSON: " + rawText);
-      }
-
-      const data = JSON.parse(rawText);
+      const res = await fetch('http://localhost:8000/stock');
+      const data = await res.json();
       setStockItems(data);
     } catch (error) {
       console.error("Failed to fetch stock:", error);
     }
   };
 
-  // Refetch when filters change
   useEffect(() => {
     fetchStock();
-  }, [filters]);
+  }, []);
 
   const handleDelete = async (id) => {
     try {
-      await fetch(`${API_BASE}/stock/${id}`, { method: 'DELETE' });
+      await fetch(`http://localhost:8000/stock/${id}`, { method: 'DELETE' });
       fetchStock();
     } catch (err) {
       console.error("Delete failed:", err);
@@ -93,19 +83,26 @@ const StockPage = () => {
         <input
           type="text"
           placeholder="Search by name, ID, or barcode"
-          className="border px-4 py-2 rounded-md w-full max-w-md text-black"
-          value={filters.query}
-          onChange={(e) =>
-            setFilters((prev) => ({ ...prev, query: e.target.value }))
-          }
+          className="border px-4 py-2 rounded-md w-full max-w-md"
         />
-        <button 
+        <button
           className="flex items-center gap-1 px-4 py-2 border rounded-md hover:bg-gray-100"
-          onClick={() => setShowFilters((prev) => !prev)}
+          onClick={() => setShowFilters(prev => !prev)}
         >
           <Filter className="w-4 h-4" />
           Filters
         </button>
+        <select
+          className="border px-2 py-1 rounded-md bg-white text-black"
+          value={columns}
+          onChange={(e) => setColumns(Number(e.target.value))}
+        >
+          {[3, 4, 5, 6, 7].map((num) => (
+            <option key={num} value={num}>
+              {num} per row
+            </option>
+          ))}
+        </select>
       </div>
 
       {/* Filter Component */}
@@ -125,26 +122,15 @@ const StockPage = () => {
         />
       )}
 
-      {/* Stock Items */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-        {stockItems.length > 0 ? (
-          stockItems.map(item => (
-            <StockItemWidget key={item.id} item={item} onClick={setPopupItem} />
-          ))
-        ) : (
-          <p className="text-gray-400">No stock items found.</p>
+      {/* Grid Widget Layout */}
+      <div className={`grid ${columnClass} gap-6`}>
+        {stockItems.map((item) => (
+          <StockItemWidget key={item.id} item={item} onClick={handleEdit} />
+        ))}
+        {stockItems.length === 0 && (
+          <p className="text-gray-400 text-center col-span-full">No stock items found.</p>
         )}
       </div>
-
-      {/* Popup for Details */}
-      {popupItem && (
-        <StockItemPopup
-          item={popupItem}
-          onClose={() => setPopupItem(null)}
-          onEdit={handleEdit}
-          onDelete={handleDelete}
-        />
-      )}
     </div>
   );
 };
