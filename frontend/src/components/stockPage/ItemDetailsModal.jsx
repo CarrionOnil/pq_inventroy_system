@@ -51,6 +51,7 @@ const ItemDetailsModal = ({ isOpen, onClose, item }) => {
                 <p><strong>Location:</strong> {item.location}</p>
                 <p><strong>Cost to Make:</strong> ${item.cost_to_make || '0.00'}</p>
                 <p><strong>Barcode:</strong> {item.barcode}</p>
+                <p><strong>Lot #:</strong> {item.lot_number || 'N/A'}</p>
               </div>
 
               {/* Description */}

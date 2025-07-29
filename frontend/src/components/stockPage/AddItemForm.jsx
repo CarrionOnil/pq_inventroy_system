@@ -12,7 +12,12 @@ export default function AddItemForm({ onClose, onSuccess, initialData }) {
     barcode: '',
     status: 'In Stock',
     cost: '',
+    lot_number: '',
     description: '',
+    bin_numbers: '',
+    supplier: '',
+    production_stage: '',
+    notes: '',
     image: null,
     file: null,
   });
@@ -20,7 +25,6 @@ export default function AddItemForm({ onClose, onSuccess, initialData }) {
   const [locations, setLocations] = useState([]);
 
   useEffect(() => {
-    // Fetch available locations
     const fetchLocations = async () => {
       try {
         const res = await fetch(`${API_BASE}/locations`);
@@ -56,7 +60,6 @@ export default function AddItemForm({ onClose, onSuccess, initialData }) {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-
     const payload = new FormData();
     Object.entries(formData).forEach(([key, value]) => {
       if (value !== null && value !== undefined) {
@@ -85,86 +88,37 @@ export default function AddItemForm({ onClose, onSuccess, initialData }) {
   return (
     <form onSubmit={handleSubmit} className="p-4 bg-gray-800 border rounded-lg space-y-6">
       <div className="grid grid-cols-2 gap-4">
-        <input
-          name="name"
-          placeholder="Name"
-          value={formData.name}
-          onChange={handleInputChange}
-          className="border px-3 py-2 rounded-md text-black"
-        />
-        <input
-          name="partId"
-          placeholder="Part ID"
-          value={formData.partId}
-          onChange={handleInputChange}
-          className="border px-3 py-2 rounded-md text-black"
-        />
-        <input
-          name="category"
-          placeholder="Category"
-          value={formData.category}
-          onChange={handleInputChange}
-          className="border px-3 py-2 rounded-md text-black"
-        />
-        <input
-          name="quantity"
-          type="number"
-          placeholder="Quantity"
-          value={formData.quantity}
-          onChange={handleInputChange}
-          className="border px-3 py-2 rounded-md text-black"
-        />
-        <select
-          name="location"
-          value={formData.location}
-          onChange={handleInputChange}
-          required
-          className="border px-3 py-2 rounded-md text-black"
-        >
+        <input name="name" placeholder="Name" value={formData.name} onChange={handleInputChange} className="border px-3 py-2 rounded-md text-black" />
+        <input name="partId" placeholder="Part ID" value={formData.partId} onChange={handleInputChange} className="border px-3 py-2 rounded-md text-black" />
+        <input name="category" placeholder="Category" value={formData.category} onChange={handleInputChange} className="border px-3 py-2 rounded-md text-black" />
+        <input name="quantity" type="number" placeholder="Quantity" value={formData.quantity} onChange={handleInputChange} className="border px-3 py-2 rounded-md text-black" />
+        
+        <select name="location" value={formData.location} onChange={handleInputChange} required className="border px-3 py-2 rounded-md text-black">
           <option value="">Select Location</option>
           {locations.map((loc) => (
-            <option key={loc.id} value={loc.name}>
-              {loc.name}
-            </option>
+            <option key={loc.id} value={loc.name}>{loc.name}</option>
           ))}
         </select>
-        
-        <input
-            name="cost"
-            type="number"
-            placeholder="Cost to Make"
-            value={formData.cost}
-            onChange={handleInputChange}
-            className="border px-3 py-2 rounded-md text-black"
-          />
 
-        <input
-          name="barcode"
-          placeholder="Barcode"
-          value={formData.barcode}
-          onChange={handleInputChange}
-          className="border px-3 py-2 rounded-md text-black"
-        />
+        <input name="cost" type="number" placeholder="Cost to Make" value={formData.cost} onChange={handleInputChange} className="border px-3 py-2 rounded-md text-black" />
+        <input name="barcode" placeholder="Barcode" value={formData.barcode} onChange={handleInputChange} className="border px-3 py-2 rounded-md text-black" />
+        <input name="lot_number" placeholder="Lot #" value={formData.lot_number} onChange={handleInputChange} className="border px-3 py-2 rounded-md text-black" />
         
-         <textarea
-            name="description"
-            placeholder="Description"
-            value={formData.description}
-            onChange={handleInputChange}
-            className="border px-3 py-2 rounded-md text-black col-span-2"
-          />
+        <textarea name="description" placeholder="Description" value={formData.description} onChange={handleInputChange} className="border px-3 py-2 rounded-md text-black col-span-2" />
 
-        <select
-          name="status"
-          value={formData.status}
-          onChange={handleInputChange}
-          className="border px-3 py-2 rounded-md text-black col-span-2"
-        >
+        <select name="status" value={formData.status} onChange={handleInputChange} className="border px-3 py-2 rounded-md text-black col-span-2">
           <option value="In Stock">In Stock</option>
           <option value="Low Stock">Low Stock</option>
           <option value="Out of Stock">Out of Stock</option>
         </select>
 
+        {/* Other Info */}
+        <input name="bin_numbers" placeholder="Bin Numbers" value={formData.bin_numbers} onChange={handleInputChange} className="border px-3 py-2 rounded-md text-black" />
+        <input name="supplier" placeholder="Supplier" value={formData.supplier} onChange={handleInputChange} className="border px-3 py-2 rounded-md text-black" />
+        <input name="production_stage" placeholder="Production Stage" value={formData.production_stage} onChange={handleInputChange} className="border px-3 py-2 rounded-md text-black" />
+        <input name="notes" placeholder="Notes/Comments" value={formData.notes} onChange={handleInputChange} className="border px-3 py-2 rounded-md text-black col-span-2" />
+
+        {/* File Uploads */}
         <div className="col-span-1">
           <label className="text-sm text-white mb-1 block">Item Image</label>
           <input
@@ -175,11 +129,7 @@ export default function AddItemForm({ onClose, onSuccess, initialData }) {
             className="block w-full text-white file:mr-4 file:py-2 file:px-4 file:border-0 file:rounded-md file:bg-blue-600 file:text-white hover:file:bg-blue-700"
           />
           {formData.image && (
-            <img
-              src={URL.createObjectURL(formData.image)}
-              alt="Preview"
-              className="mt-2 h-24 rounded-md"
-            />
+            <img src={URL.createObjectURL(formData.image)} alt="Preview" className="mt-2 h-24 rounded-md" />
           )}
         </div>
 
@@ -199,24 +149,13 @@ export default function AddItemForm({ onClose, onSuccess, initialData }) {
       </div>
 
       <div className="flex gap-4 mt-4">
-        <button
-          type="submit"
-          className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700"
-        >
+        <button type="submit" className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700">
           {initialData ? 'Update' : 'Save'}
         </button>
-        <button
-          type="button"
-          onClick={onClose}
-          className="px-4 py-2 border rounded-md hover:bg-gray-700"
-        >
+        <button type="button" onClick={onClose} className="px-4 py-2 border rounded-md hover:bg-gray-700">
           Cancel
         </button>
       </div>
     </form>
   );
 }
-
-
-
-

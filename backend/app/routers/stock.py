@@ -18,6 +18,11 @@ class StockItem(BaseModel):
     location: str
     barcode: str
     status: str
+    lot_number: Optional[str] = None
+    bin_numbers: Optional[str] = None
+    supplier: Optional[str] = None
+    production_stage: Optional[str] = None
+    notes: Optional[str] = None
     image_url: Optional[str] = None
     file_url: Optional[str] = None
 
@@ -33,30 +38,49 @@ def get_stock():
 
 @router.post("/stock", response_model=StockItem)
 async def create_stock(
-    name: str = Form(...), partId: str = Form(...),
-    category: str = Form(...), quantity: int = Form(...),
-    location: str = Form(...), barcode: str = Form(...),
+    name: str = Form(...), 
+    partId: str = Form(...),
+    category: str = Form(...), 
+    quantity: int = Form(...),
+    location: str = Form(...), 
+    barcode: str = Form(...),
     status: str = Form(...),
+    lot_number: Optional[str] = Form(None),
+    bin_numbers: Optional[str] = Form(None),
+    supplier: Optional[str] = Form(None),
+    production_stage: Optional[str] = Form(None),
+    notes: Optional[str] = Form(None),
     image: Optional[UploadFile] = File(None),
     file: Optional[UploadFile] = File(None)
 ):
     new_id = (max([i.id or 0 for i in fake_stock]) + 1) if fake_stock else 1
     item = StockItem(
-        id=new_id, name=name, partId=partId, category=category,
-        quantity=quantity, location=location, barcode=barcode,
-        status=status
+        id=new_id, 
+        name=name, 
+        partId=partId, 
+        category=category,
+        quantity=quantity, 
+        location=location, 
+        barcode=barcode,
+        status=status,
+        lot_number=lot_number,
+        bin_numbers=bin_numbers,
+        supplier=supplier,
+        production_stage=production_stage,
+        notes=notes
     )
+
     if image:
         path = UPLOAD_DIR / "images" / f"{uuid.uuid4()}_{image.filename}"
         with path.open("wb") as buffer:
             shutil.copyfileobj(image.file, buffer)
-        item.image_url = f"/static/images/{path.name}"  # ✅ Public path for frontend
+        item.image_url = f"/static/images/{path.name}"  # Public path for frontend
 
     if file:
         pathf = UPLOAD_DIR / "files" / f"{uuid.uuid4()}_{file.filename}"
         with pathf.open("wb") as buf:
             shutil.copyfileobj(file.file, buf)
-        item.file_url = f"/static/files/{pathf.name}"  # ✅ Public path for frontend
+        item.file_url = f"/static/files/{pathf.name}"  # Public path for frontend
 
     bom = next((b for b in boms if b.product_barcode == barcode), None)
     if bom:
