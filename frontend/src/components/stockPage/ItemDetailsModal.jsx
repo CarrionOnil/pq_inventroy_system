@@ -54,7 +54,6 @@ const ItemDetailsModal = ({ isOpen, onClose, item, onEdit }) => {
                 <p><strong>Location:</strong> {item.location}</p>
                 <p><strong>Cost to Make:</strong> ${item.cost_to_make || '0.00'}</p>
                 <p><strong>Barcode:</strong> {item.barcode}</p>
-                <p><strong>Lot #:</strong> {item.lot_number || 'N/A'}</p>
               </div>
 
               {/* Description */}
@@ -91,6 +90,7 @@ const ItemDetailsModal = ({ isOpen, onClose, item, onEdit }) => {
                 <p><strong>Bin Number:</strong> {item.bin_numbers || 'N/A'}</p>
                 <p><strong>Supplier:</strong> {item.supplier || 'N/A'}</p>
                 <p><strong>Production Stage:</strong> {item.production_stage || 'N/A'}</p>
+                <p><strong>Lot #:</strong> {item.lot_number || 'N/A'}</p>
                 <p><strong>Notes/Comments:</strong> {item.notes || 'N/A'}</p>
               </div>
             </div>
