@@ -3,7 +3,7 @@ import { Dialog } from '@headlessui/react';
 import { X, Pencil } from 'lucide-react';
 import { API_BASE } from '../../config';
 
-const ItemDetailsModal = ({ isOpen, onClose, item }) => {
+const ItemDetailsModal = ({ isOpen, onClose, item, onEdit }) => {
   if (!item) return null;
 
   return (
@@ -17,7 +17,10 @@ const ItemDetailsModal = ({ isOpen, onClose, item }) => {
               <p className="text-sm text-gray-500">Part ID: {item.partId}</p>
             </div>
             <div className="flex gap-3">
-              <button className="text-blue-600 hover:underline flex items-center gap-1">
+              <button
+                onClick={() => onEdit(item)} // ✅ Call the onEdit prop
+                className="text-blue-600 hover:underline flex items-center gap-1"
+              >
                 <Pencil size={16} />
                 Edit
               </button>

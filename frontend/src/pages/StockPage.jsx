@@ -126,16 +126,18 @@ const StockPage = () => {
           onSuccess={fetchStock}
           initialData={editItem}
         />
-      )}
+      )}     
 
-      {/* Modal for viewing item details */}
-      {viewItem && (
-        <ItemDetailsModal
-          isOpen={!!viewItem}
-          item={viewItem}
-          onClose={() => setViewItem(null)}
-        />
-      )}
+      <ItemDetailsModal
+        isOpen={!!viewItem}
+        item={viewItem}
+        onClose={() => setViewItem(null)}
+        onEdit={(item) => {
+        setEditItem(item);
+        setShowForm(true);
+        setViewItem(null); // close the modal after clicking edit
+      }}
+    />
 
       {/* Grid Widget Layout */}
       <div className={`grid ${columnClass} gap-6`}>
