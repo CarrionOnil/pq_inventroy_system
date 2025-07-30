@@ -4,6 +4,7 @@ import AddItemForm from '../components/stockPage/AddItemForm';
 import StockSearchFilter from '../components/stockPage/StockSearchFilter';
 import StockItemWidget from '../components/stockPage/StockItemWidget';
 import ItemDetailsModal from '../components/stockPage/ItemDetailsModal';
+import CategoryManager from '../components/stockPage/CategoryManager'; // ✅ NEW
 
 const StockPage = () => {
   const [stockItems, setStockItems] = useState([]);
@@ -15,7 +16,7 @@ const StockPage = () => {
 
   const [filters, setFilters] = useState({
     query: '',
-    category: '',
+    category: [],
     status: '',
     location: '',
   });
@@ -31,7 +32,14 @@ const StockPage = () => {
 
   const fetchStock = async () => {
     try {
-      const res = await fetch('http://localhost:8000/stock');
+      const params = new URLSearchParams();
+      if (filters.status) params.append('status', filters.status);
+      if (filters.location) params.append('location', filters.location);
+      if (filters.category.length > 0) {
+        params.append('category', filters.category.join(','));
+      }
+
+      const res = await fetch(`http://localhost:8000/stock?${params.toString()}`);
       const data = await res.json();
       setStockItems(data);
     } catch (error) {
@@ -41,7 +49,7 @@ const StockPage = () => {
 
   useEffect(() => {
     fetchStock();
-  }, []);
+  }, [filters]);
 
   const handleDelete = async (id) => {
     try {
@@ -113,7 +121,10 @@ const StockPage = () => {
 
       {/* Filter Component */}
       {showFilters && (
-        <StockSearchFilter filters={filters} setFilters={setFilters} />
+        <div className="space-y-4">
+          <StockSearchFilter filters={filters} setFilters={setFilters} />
+          
+        </div>
       )}
 
       {/* Add/Edit Item Form */}
@@ -126,18 +137,18 @@ const StockPage = () => {
           onSuccess={fetchStock}
           initialData={editItem}
         />
-      )}     
+      )}
 
       <ItemDetailsModal
         isOpen={!!viewItem}
         item={viewItem}
         onClose={() => setViewItem(null)}
         onEdit={(item) => {
-        setEditItem(item);
-        setShowForm(true);
-        setViewItem(null); // close the modal after clicking edit
-      }}
-    />
+          setEditItem(item);
+          setShowForm(true);
+          setViewItem(null);
+        }}
+      />
 
       {/* Grid Widget Layout */}
       <div className={`grid ${columnClass} gap-6`}>

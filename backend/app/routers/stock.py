@@ -1,4 +1,4 @@
-from fastapi import APIRouter, UploadFile, File, Form, HTTPException
+from fastapi import APIRouter, UploadFile, File, Form, HTTPException, Query
 from pydantic import BaseModel
 from typing import List, Optional
 from pathlib import Path
@@ -33,16 +33,39 @@ UPLOAD_DIR = Path("app/uploads")
 (UPLOAD_DIR / "files").mkdir(parents=True, exist_ok=True)
 
 @router.get("/stock", response_model=List[StockItem])
-def get_stock():
-    return fake_stock
+def get_stock(
+    status: Optional[str] = None,
+    location: Optional[str] = None,
+    category: Optional[str] = Query(None)
+):
+    result = fake_stock
+
+    if status:
+        def get_status(qty):
+            if qty == 0:
+                return "Out of Stock"
+            elif qty < 10:
+                return "Low Stock"
+            else:
+                return "In Stock"
+        result = [item for item in result if get_status(item.quantity) == status]
+
+    if location:
+        result = [item for item in result if item.location.lower() == location.lower()]
+
+    if category:
+        categories = category.split(",")
+        result = [item for item in result if item.category in categories]
+
+    return result
 
 @router.post("/stock", response_model=StockItem)
 async def create_stock(
-    name: str = Form(...), 
+    name: str = Form(...),
     partId: str = Form(...),
-    category: str = Form(...), 
+    category: str = Form(...),
     quantity: int = Form(...),
-    location: str = Form(...), 
+    location: str = Form(...),
     barcode: str = Form(...),
     status: str = Form(...),
     lot_number: Optional[str] = Form(None),
@@ -55,12 +78,12 @@ async def create_stock(
 ):
     new_id = (max([i.id or 0 for i in fake_stock]) + 1) if fake_stock else 1
     item = StockItem(
-        id=new_id, 
-        name=name, 
-        partId=partId, 
+        id=new_id,
+        name=name,
+        partId=partId,
         category=category,
-        quantity=quantity, 
-        location=location, 
+        quantity=quantity,
+        location=location,
         barcode=barcode,
         status=status,
         lot_number=lot_number,
@@ -115,11 +138,11 @@ async def create_stock(
 @router.put("/stock/{item_id}", response_model=StockItem)
 async def update_stock(
     item_id: int,
-    name: str = Form(...), 
+    name: str = Form(...),
     partId: str = Form(...),
-    category: str = Form(...), 
+    category: str = Form(...),
     quantity: int = Form(...),
-    location: str = Form(...), 
+    location: str = Form(...),
     barcode: str = Form(...),
     status: str = Form(...),
     lot_number: Optional[str] = Form(None),
@@ -173,9 +196,6 @@ async def update_stock(
 @router.delete("/stock/{item_id}")
 async def delete_stock(item_id: int):
     global fake_stock
-    print("Attempting to delete item ID:", item_id)
-    print("Available item IDs:", [i.id for i in fake_stock])
-
     for item in fake_stock:
         if item.id == item_id:
             fake_stock = [i for i in fake_stock if i.id != item_id]

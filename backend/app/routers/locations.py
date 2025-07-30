@@ -39,5 +39,3 @@ def delete_location(location_id: int):
     global fake_locations
     fake_locations = [loc for loc in fake_locations if loc.id != location_id]
     return {"message": "Location deleted"}
-
-

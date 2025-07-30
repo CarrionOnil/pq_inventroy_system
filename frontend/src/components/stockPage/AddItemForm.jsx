@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import CategorySelect from './CategorySelect';
 
 const API_BASE = import.meta.env.VITE_API_BASE;
 
@@ -53,6 +54,10 @@ export default function AddItemForm({ onClose, onSuccess, initialData }) {
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
+  const handleCategoryChange = (value) => {
+    setFormData((prev) => ({ ...prev, category: value }));
+  };
+
   const handleFileChange = (e) => {
     const file = e.target.files[0];
     setFormData((prev) => ({ ...prev, [e.target.name]: file }));
@@ -90,9 +95,11 @@ export default function AddItemForm({ onClose, onSuccess, initialData }) {
       <div className="grid grid-cols-2 gap-4">
         <input name="name" placeholder="Name" value={formData.name} onChange={handleInputChange} className="border px-3 py-2 rounded-md text-black" />
         <input name="partId" placeholder="Part ID" value={formData.partId} onChange={handleInputChange} className="border px-3 py-2 rounded-md text-black" />
-        <input name="category" placeholder="Category" value={formData.category} onChange={handleInputChange} className="border px-3 py-2 rounded-md text-black" />
+
+        <CategorySelect value={formData.category} onChange={handleCategoryChange} />
+
         <input name="quantity" type="number" placeholder="Quantity" value={formData.quantity} onChange={handleInputChange} className="border px-3 py-2 rounded-md text-black" />
-        
+
         <select name="location" value={formData.location} onChange={handleInputChange} required className="border px-3 py-2 rounded-md text-black">
           <option value="">Select Location</option>
           {locations.map((loc) => (
@@ -103,7 +110,7 @@ export default function AddItemForm({ onClose, onSuccess, initialData }) {
         <input name="cost" type="number" placeholder="Cost to Make" value={formData.cost} onChange={handleInputChange} className="border px-3 py-2 rounded-md text-black" />
         <input name="barcode" placeholder="Barcode" value={formData.barcode} onChange={handleInputChange} className="border px-3 py-2 rounded-md text-black" />
         <input name="lot_number" placeholder="Lot #" value={formData.lot_number} onChange={handleInputChange} className="border px-3 py-2 rounded-md text-black" />
-        
+
         <textarea name="description" placeholder="Description" value={formData.description} onChange={handleInputChange} className="border px-3 py-2 rounded-md text-black col-span-2" />
 
         <select name="status" value={formData.status} onChange={handleInputChange} className="border px-3 py-2 rounded-md text-black col-span-2">
@@ -112,39 +119,21 @@ export default function AddItemForm({ onClose, onSuccess, initialData }) {
           <option value="Out of Stock">Out of Stock</option>
         </select>
 
-        {/* Other Info */}
         <input name="bin_numbers" placeholder="Bin Numbers" value={formData.bin_numbers} onChange={handleInputChange} className="border px-3 py-2 rounded-md text-black" />
         <input name="supplier" placeholder="Supplier" value={formData.supplier} onChange={handleInputChange} className="border px-3 py-2 rounded-md text-black" />
         <input name="production_stage" placeholder="Production Stage" value={formData.production_stage} onChange={handleInputChange} className="border px-3 py-2 rounded-md text-black" />
         <input name="notes" placeholder="Notes/Comments" value={formData.notes} onChange={handleInputChange} className="border px-3 py-2 rounded-md text-black col-span-2" />
 
-        {/* File Uploads */}
         <div className="col-span-1">
           <label className="text-sm text-white mb-1 block">Item Image</label>
-          <input
-            type="file"
-            name="image"
-            accept="image/*"
-            onChange={handleFileChange}
-            className="block w-full text-white file:mr-4 file:py-2 file:px-4 file:border-0 file:rounded-md file:bg-blue-600 file:text-white hover:file:bg-blue-700"
-          />
-          {formData.image && (
-            <img src={URL.createObjectURL(formData.image)} alt="Preview" className="mt-2 h-24 rounded-md" />
-          )}
+          <input type="file" name="image" accept="image/*" onChange={handleFileChange} className="block w-full text-white file:mr-4 file:py-2 file:px-4 file:border-0 file:rounded-md file:bg-blue-600 file:text-white hover:file:bg-blue-700" />
+          {formData.image && <img src={URL.createObjectURL(formData.image)} alt="Preview" className="mt-2 h-24 rounded-md" />}
         </div>
 
         <div className="col-span-1">
           <label className="text-sm text-white mb-1 block">Attachment (PDF)</label>
-          <input
-            type="file"
-            name="file"
-            accept=".pdf"
-            onChange={handleFileChange}
-            className="block w-full text-white file:mr-4 file:py-2 file:px-4 file:border-0 file:rounded-md file:bg-gray-600 file:text-white hover:file:bg-gray-700"
-          />
-          {formData.file && (
-            <p className="text-xs text-green-400 mt-1">{formData.file.name}</p>
-          )}
+          <input type="file" name="file" accept=".pdf" onChange={handleFileChange} className="block w-full text-white file:mr-4 file:py-2 file:px-4 file:border-0 file:rounded-md file:bg-gray-600 file:text-white hover:file:bg-gray-700" />
+          {formData.file && <p className="text-xs text-green-400 mt-1">{formData.file.name}</p>}
         </div>
       </div>
 
