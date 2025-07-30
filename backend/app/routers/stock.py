@@ -36,7 +36,8 @@ UPLOAD_DIR = Path("app/uploads")
 def get_stock(
     status: Optional[str] = None,
     location: Optional[str] = None,
-    category: Optional[str] = Query(None)
+    category: Optional[str] = Query(None),
+    search: Optional[str] = Query(None)
 ):
     result = fake_stock
 
@@ -56,6 +57,14 @@ def get_stock(
     if category:
         categories = category.split(",")
         result = [item for item in result if item.category in categories]
+
+    if search:
+        result = [
+            item for item in result
+            if search.lower() in item.name.lower()
+            or search.lower() in item.partId.lower()
+            or search.lower() in item.barcode.lower()
+        ]
 
     return result
 

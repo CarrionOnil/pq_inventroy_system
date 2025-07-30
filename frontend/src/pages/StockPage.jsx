@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Filter, Plus, Download } from 'lucide-react';
+import { Search, Filter, Plus, Download } from 'lucide-react';
 import AddItemForm from '../components/stockPage/AddItemForm';
 import StockSearchFilter from '../components/stockPage/StockSearchFilter';
 import StockItemWidget from '../components/stockPage/StockItemWidget';
@@ -14,7 +14,8 @@ const StockPage = () => {
   const [columns, setColumns] = useState(4);
 
   const [filters, setFilters] = useState({
-    category: '',
+    query: '',
+    category: [],
     status: '',
     location: '',
   });
@@ -31,9 +32,12 @@ const StockPage = () => {
   const fetchStock = async () => {
     try {
       const params = new URLSearchParams();
+      if (filters.query) params.append('search', filters.query);
       if (filters.status) params.append('status', filters.status);
       if (filters.location) params.append('location', filters.location);
-      if (filters.category) params.append('category', filters.category);
+      if (filters.category.length > 0) {
+        params.append('category', filters.category.join(','));
+      }
 
       const res = await fetch(`http://localhost:8000/stock?${params.toString()}`);
       const data = await res.json();
@@ -90,6 +94,15 @@ const StockPage = () => {
 
       {/* Search and Filter */}
       <div className="flex items-center gap-3">
+        <input
+          type="text"
+          placeholder="Search by name, ID, or barcode"
+          value={filters.query}
+          onChange={(e) =>
+            setFilters((prev) => ({ ...prev, query: e.target.value }))
+          }
+          className="border px-4 py-2 rounded-md w-full max-w-md text-black"
+        />
         <button
           className="flex items-center gap-1 px-4 py-2 border rounded-md hover:bg-gray-100"
           onClick={() => setShowFilters(prev => !prev)}
@@ -112,7 +125,9 @@ const StockPage = () => {
 
       {/* Filter Component */}
       {showFilters && (
-        <StockSearchFilter filters={filters} setFilters={setFilters} />
+        <div className="space-y-4">
+          <StockSearchFilter filters={filters} setFilters={setFilters} />
+        </div>
       )}
 
       {/* Add/Edit Item Form */}
