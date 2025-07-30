@@ -1,10 +1,9 @@
 import React, { useEffect, useState } from 'react';
-import { Search, Filter, Plus, Download } from 'lucide-react';
+import { Filter, Plus, Download } from 'lucide-react';
 import AddItemForm from '../components/stockPage/AddItemForm';
 import StockSearchFilter from '../components/stockPage/StockSearchFilter';
 import StockItemWidget from '../components/stockPage/StockItemWidget';
 import ItemDetailsModal from '../components/stockPage/ItemDetailsModal';
-import CategoryManager from '../components/stockPage/CategoryManager'; // ✅ NEW
 
 const StockPage = () => {
   const [stockItems, setStockItems] = useState([]);
@@ -15,8 +14,7 @@ const StockPage = () => {
   const [columns, setColumns] = useState(4);
 
   const [filters, setFilters] = useState({
-    query: '',
-    category: [],
+    category: '',
     status: '',
     location: '',
   });
@@ -35,9 +33,7 @@ const StockPage = () => {
       const params = new URLSearchParams();
       if (filters.status) params.append('status', filters.status);
       if (filters.location) params.append('location', filters.location);
-      if (filters.category.length > 0) {
-        params.append('category', filters.category.join(','));
-      }
+      if (filters.category) params.append('category', filters.category);
 
       const res = await fetch(`http://localhost:8000/stock?${params.toString()}`);
       const data = await res.json();
@@ -94,11 +90,6 @@ const StockPage = () => {
 
       {/* Search and Filter */}
       <div className="flex items-center gap-3">
-        <input
-          type="text"
-          placeholder="Search by name, ID, or barcode"
-          className="border px-4 py-2 rounded-md w-full max-w-md"
-        />
         <button
           className="flex items-center gap-1 px-4 py-2 border rounded-md hover:bg-gray-100"
           onClick={() => setShowFilters(prev => !prev)}
@@ -121,10 +112,7 @@ const StockPage = () => {
 
       {/* Filter Component */}
       {showFilters && (
-        <div className="space-y-4">
-          <StockSearchFilter filters={filters} setFilters={setFilters} />
-          
-        </div>
+        <StockSearchFilter filters={filters} setFilters={setFilters} />
       )}
 
       {/* Add/Edit Item Form */}
