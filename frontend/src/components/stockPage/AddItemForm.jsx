@@ -119,7 +119,7 @@ export default function AddItemForm({ onClose, onSuccess, initialData }) {
           <option value="Out of Stock">Out of Stock</option>
         </select>
 
-        <input name="bin_numbers" placeholder="Bin Numbers" value={formData.bin_numbers} onChange={handleInputChange} className="border px-3 py-2 rounded-md text-black" />
+        <input name="bin_numbers" placeholder="Aisle #" value={formData.bin_numbers} onChange={handleInputChange} className="border px-3 py-2 rounded-md text-black" />
         <input name="supplier" placeholder="Supplier" value={formData.supplier} onChange={handleInputChange} className="border px-3 py-2 rounded-md text-black" />
         <input name="production_stage" placeholder="Production Stage" value={formData.production_stage} onChange={handleInputChange} className="border px-3 py-2 rounded-md text-black" />
         <input name="notes" placeholder="Notes/Comments" value={formData.notes} onChange={handleInputChange} className="border px-3 py-2 rounded-md text-black col-span-2" />

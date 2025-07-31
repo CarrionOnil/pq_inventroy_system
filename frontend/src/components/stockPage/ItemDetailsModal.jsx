@@ -1,10 +1,45 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Dialog } from '@headlessui/react';
 import { X, Pencil } from 'lucide-react';
 import { API_BASE } from '../../config';
 
 const ItemDetailsModal = ({ isOpen, onClose, item, onEdit }) => {
+  const [scrapAmount, setScrapAmount] = useState('');
+  const [scrapReason, setScrapReason] = useState('');
+  const [scrapError, setScrapError] = useState('');
+  const [scrapSuccess, setScrapSuccess] = useState('');
+
   if (!item) return null;
+
+  const handleScrap = async () => {
+    setScrapError('');
+    setScrapSuccess('');
+    if (!scrapAmount || isNaN(scrapAmount)) {
+      setScrapError('Enter a valid quantity to scrap.');
+      return;
+    }
+
+    try {
+      const res = await fetch(`${API_BASE}/stock/scrap`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          barcode: item.barcode,
+          amount: parseInt(scrapAmount),
+          reason: scrapReason || 'No reason provided',
+        }),
+      });
+
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.detail || 'Failed to scrap');
+
+      setScrapSuccess('Scrapped successfully!');
+      setScrapAmount('');
+      setScrapReason('');
+    } catch (err) {
+      setScrapError(err.message);
+    }
+  };
 
   return (
     <Dialog open={isOpen} onClose={onClose} className="fixed z-50 inset-0 overflow-y-auto">
@@ -18,7 +53,7 @@ const ItemDetailsModal = ({ isOpen, onClose, item, onEdit }) => {
             </div>
             <div className="flex gap-3">
               <button
-                onClick={() => onEdit(item)} // ✅ Call the onEdit prop
+                onClick={() => onEdit(item)}
                 className="text-blue-600 hover:underline flex items-center gap-1"
               >
                 <Pencil size={16} />
@@ -34,7 +69,6 @@ const ItemDetailsModal = ({ isOpen, onClose, item, onEdit }) => {
           <div className="grid grid-cols-2 gap-10">
             {/* Left Section */}
             <div>
-              {/* Image */}
               {item.image_url ? (
                 <img
                   src={`${API_BASE}${item.image_url}`}
@@ -46,17 +80,14 @@ const ItemDetailsModal = ({ isOpen, onClose, item, onEdit }) => {
                   No Image
                 </div>
               )}
-
-              {/* Info List */}
               <div className="space-y-1 text-sm text-gray-700">
                 <p><strong>Quantity:</strong> {item.quantity}</p>
+                <p><strong>Scrapped:</strong> {item.scrap_count || 0}</p>
                 <p><strong>Category:</strong> {item.category}</p>
                 <p><strong>Location:</strong> {item.location}</p>
                 <p><strong>Cost to Make:</strong> ${item.cost_to_make || '0.00'}</p>
                 <p><strong>Barcode:</strong> {item.barcode}</p>
               </div>
-
-              {/* Description */}
               <div className="mt-4">
                 <p className="font-semibold text-sm mb-1">Description</p>
                 <p className="text-sm text-gray-600">{item.description || 'No description provided.'}</p>
@@ -65,7 +96,6 @@ const ItemDetailsModal = ({ isOpen, onClose, item, onEdit }) => {
 
             {/* Right Section */}
             <div className="space-y-6">
-              {/* Attachments */}
               <div>
                 <p className="font-semibold text-sm mb-2">Attachments</p>
                 {item.attachment_url ? (
@@ -84,14 +114,42 @@ const ItemDetailsModal = ({ isOpen, onClose, item, onEdit }) => {
                 )}
               </div>
 
-              {/* Other Info */}
               <div className="space-y-1 text-sm text-gray-700">
                 <p className="font-semibold">Other Info</p>
-                <p><strong>Bin Number:</strong> {item.bin_numbers || 'N/A'}</p>
+                <p><strong>Aisle #:</strong> {item.bin_numbers || 'N/A'}</p>
                 <p><strong>Supplier:</strong> {item.supplier || 'N/A'}</p>
                 <p><strong>Production Stage:</strong> {item.production_stage || 'N/A'}</p>
                 <p><strong>Lot #:</strong> {item.lot_number || 'N/A'}</p>
                 <p><strong>Notes/Comments:</strong> {item.notes || 'N/A'}</p>
+              </div>
+
+              {/* Scrap Form */}
+              <div className="border-t pt-4">
+                <p className="font-semibold mb-2 text-sm">Scrap Item</p>
+                <div className="flex flex-col gap-2 sm:flex-row">
+                  <input
+                    type="number"
+                    value={scrapAmount}
+                    onChange={(e) => setScrapAmount(e.target.value)}
+                    placeholder="Qty to scrap"
+                    className="border p-2 rounded w-full sm:w-32"
+                  />
+                  <input
+                    type="text"
+                    value={scrapReason}
+                    onChange={(e) => setScrapReason(e.target.value)}
+                    placeholder="Reason"
+                    className="border p-2 rounded w-full"
+                  />
+                  <button
+                    onClick={handleScrap}
+                    className="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700"
+                  >
+                    Scrap
+                  </button>
+                </div>
+                {scrapError && <p className="text-sm text-red-500 mt-2">{scrapError}</p>}
+                {scrapSuccess && <p className="text-sm text-green-600 mt-2">{scrapSuccess}</p>}
               </div>
             </div>
           </div>

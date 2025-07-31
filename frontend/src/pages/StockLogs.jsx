@@ -39,6 +39,10 @@ export default function StockLogsPage() {
       return `BOM: ${parts.join(', ')}`;
     }
 
+    if (action === 'scrap' && details.reason) {
+      return `Reason: ${details.reason}`;
+    }
+
     // Default: print field-level diffs
     const diffs = Object.entries(details).map(([key, val]) => {
       if (Array.isArray(val) && val.length === 2 && typeof val[0] !== 'object') {
@@ -71,7 +75,7 @@ export default function StockLogsPage() {
           </thead>
           <tbody>
             {logs.map((log, index) => (
-              <tr key={index} className="border-t">
+              <tr key={index} className={`border-t ${log.action === 'scrap' ? 'bg-red-50' : ''}`}>
                 <td className="px-4 py-2">{index + 1}</td>
                 <td className="px-4 py-2">{new Date(log.timestamp).toLocaleString()}</td>
                 <td className="px-4 py-2 capitalize">{log.action}</td>

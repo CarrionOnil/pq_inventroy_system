@@ -1,6 +1,7 @@
 import React, { useRef, useState } from 'react';
 import { Html5Qrcode } from 'html5-qrcode';
 import { API_BASE } from '../config';
+import ItemDetailsModal from '../components/stockPage/ItemDetailsModal';
 
 export default function BarcodeScannerPage() {
   const scannerRef = useRef(null);
@@ -9,6 +10,7 @@ export default function BarcodeScannerPage() {
   const [scanning, setScanning] = useState(false);
   const [adjustAmount, setAdjustAmount] = useState('');
   const [adjusting, setAdjusting] = useState(false);
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   const startScanner = async () => {
     const html5QrCode = new Html5Qrcode("qr-reader");
@@ -120,6 +122,12 @@ export default function BarcodeScannerPage() {
             >
               Remove
             </button>
+            <button
+              onClick={() => setIsModalOpen(true)}
+              className="bg-gray-800 text-white px-4 py-2 rounded hover:bg-gray-900"
+            >
+              More Info
+            </button>
           </div>
         </div>
       )}
@@ -127,10 +135,13 @@ export default function BarcodeScannerPage() {
       {error && (
         <p className="mt-4 text-red-500">{error}</p>
       )}
+
+      <ItemDetailsModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        item={scannedData}
+        onEdit={() => {}}
+      />
     </div>
   );
 }
-
-
-
-

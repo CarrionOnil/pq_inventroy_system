@@ -18,6 +18,7 @@ class StockItem(BaseModel):
     location: str
     barcode: str
     status: str
+    scrap_count: int = 0  # ✅ Added field
     lot_number: Optional[str] = None
     bin_numbers: Optional[str] = None
     supplier: Optional[str] = None
@@ -225,3 +226,84 @@ def get_item_by_barcode(barcode: str):
     if not item:
         raise HTTPException(status_code=404, detail="Item not found")
     return item
+
+class ScrapRequest(BaseModel):
+    barcode: str
+    amount: int
+    reason: Optional[str] = "No reason provided"
+
+@router.post("/stock/scrap")
+def scrap_item(data: ScrapRequest):
+    item = next((i for i in fake_stock if i.barcode == data.barcode.strip()), None)
+    if not item:
+        raise HTTPException(status_code=404, detail="Item not found")
+
+    if data.amount <= 0 or item.quantity < data.amount:
+        raise HTTPException(status_code=400, detail="Invalid scrap amount")
+
+    item.quantity -= data.amount
+    item.scrap_count += data.amount
+
+    stock_logs.append(StockLog(
+        timestamp=datetime.utcnow(),
+        action="scrap",
+        barcode=item.barcode,
+        amount=data.amount,
+        resulting_qty=item.quantity,
+        details={"reason": data.reason}
+    ))
+
+    return {"message": "Item scrapped successfully", "item": item}
+
+class ScanUpdateRequest(BaseModel):
+    barcode: str
+    amount: int
+    action: Optional[str] = "add"
+
+@router.post("/scan")
+def scan_update(request: ScanUpdateRequest):
+    item = next((i for i in fake_stock if i.barcode == request.barcode.strip()), None)
+    if not item:
+        raise HTTPException(status_code=404, detail="Item not found")
+
+    if request.action == "add":
+        # Check for BOM
+        bom = next((b for b in boms if b.product_barcode == item.barcode), None)
+        if bom:
+            for comp_barcode, qty_each in bom.components.items():
+                required = qty_each * request.amount
+                comp = next((i for i in fake_stock if i.barcode == comp_barcode), None)
+                if not comp or comp.quantity < required:
+                    raise HTTPException(status_code=400, detail=f"Not enough {comp.name if comp else comp_barcode} in stock")
+                comp.quantity -= required
+                stock_logs.append(StockLog(
+                    timestamp=datetime.utcnow(),
+                    action="consume",
+                    barcode=comp.barcode,
+                    amount=required,
+                    resulting_qty=comp.quantity,
+                    details={"used_for": item.barcode}
+                ))
+
+        item.quantity += request.amount
+        log_action = "scan_add"
+
+    elif request.action == "remove":
+        if item.quantity < request.amount:
+            raise HTTPException(status_code=400, detail="Not enough stock to remove")
+        item.quantity -= request.amount
+        log_action = "scan_remove"
+
+    else:
+        raise HTTPException(status_code=400, detail="Invalid action")
+
+    stock_logs.append(StockLog(
+        timestamp=datetime.utcnow(),
+        action=log_action,
+        barcode=item.barcode,
+        amount=request.amount,
+        resulting_qty=item.quantity
+    ))
+
+    return {"message": "Stock updated", "item": item}
+
