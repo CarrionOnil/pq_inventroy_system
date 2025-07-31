@@ -218,3 +218,10 @@ async def delete_stock(item_id: int):
             ))
             return {"message": "Item deleted"}
     raise HTTPException(status_code=404, detail="Item not found")
+
+@router.get("/stock/barcode/{barcode}", response_model=StockItem)
+def get_item_by_barcode(barcode: str):
+    item = next((i for i in fake_stock if i.barcode == barcode.strip()), None)
+    if not item:
+        raise HTTPException(status_code=404, detail="Item not found")
+    return item
