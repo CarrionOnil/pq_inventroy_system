@@ -44,6 +44,10 @@ export default function Sidebar() {
         <Link to="/assemble" className={navLinkClass('/assemble')}>
             🔩 Assemble
         </Link>
+        <Link to="/modelviewer" className={navLinkClass('/modelviewer')}>
+          🧊 3D Viewer
+        </Link>
+
         <Link to="/settings" className={navLinkClass('/settings')}>
           <FaCogs /> Settings
         </Link>
