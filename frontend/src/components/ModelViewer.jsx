@@ -1,74 +1,92 @@
 import { Canvas, useLoader } from '@react-three/fiber';
 import { OrbitControls, Stage } from '@react-three/drei';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader';
-import { useState, useRef, useEffect } from 'react';
+import { useState, useMemo, useEffect } from 'react';
+import * as THREE from 'three';
 
-function Model({ onPartClick, exploded }) {
-  const gltf = useLoader(GLTFLoader, '/models/M115 ASM.glb');
-  const modelRef = useRef();
+function Model({ modelPath, isExploded, onPartClick, setHovered }) {
+  const gltf = useLoader(GLTFLoader, modelPath);
 
   useEffect(() => {
-    if (!modelRef.current) return;
-
-    const meshes = [];
-
-    modelRef.current.traverse((child) => {
+    let meshCount = 0;
+    console.log(`🔍 Loaded model: ${modelPath}`);
+    gltf.scene.traverse((child) => {
       if (child.isMesh) {
-        // Save original position once
-        if (!child.userData.originalPosition) {
-          child.userData.originalPosition = child.position.clone();
-        }
-
-        // Store mesh
-        meshes.push(child);
-
-        // Color setup
-        child.material.color.set('#ccc');
-        if (child.name.toLowerCase().includes('piston')) {
-          child.material.color.set('red');
-        }
-
-        // Clickable
-        child.cursor = 'pointer';
-        child.onClick = (e) => {
-          e.stopPropagation();
-          onPartClick(child);
-        };
+        meshCount++;
+        console.log(`Mesh ${meshCount}: ${child.name}`, child);
       }
     });
+    console.log(`🧩 Total mesh parts: ${meshCount}`);
+  }, [gltf, modelPath]);
 
-    // Explode logic
-    if (exploded) {
-      const offset = 1;
-      meshes.forEach((mesh, i) => {
-        const angle = (i / meshes.length) * 2 * Math.PI;
-        const direction = [Math.cos(angle), 0.5, Math.sin(angle)];
-        mesh.position.set(
-          mesh.userData.originalPosition.x + direction[0] * offset,
-          mesh.userData.originalPosition.y + direction[1] * offset,
-          mesh.userData.originalPosition.z + direction[2] * offset
-        );
-      });
-    } else {
-      meshes.forEach((mesh) => {
-        mesh.position.copy(mesh.userData.originalPosition);
-      });
-    }
-  }, [gltf, onPartClick, exploded]);
+  const parts = useMemo(() => {
+    const items = [];
+    gltf.scene.traverse((child) => {
+      if (child.isMesh) {
+        const originalColor = child.material.color.clone();
+        if (child.name.toLowerCase().includes('piston')) {
+          child.material.color.set('red');
+        } else {
+          child.material.color.set('#ccc');
+        }
 
-  return <primitive object={gltf.scene} ref={modelRef} scale={1.5} />;
+        items.push({ mesh: child, originalColor });
+      }
+    });
+    return items;
+  }, [gltf]);
+
+  return (
+    <>
+      {isExploded ? (
+        parts.map(({ mesh }, index) => (
+          <primitive
+            key={index}
+            object={mesh}
+            onPointerOver={(e) => {
+              e.stopPropagation();
+              mesh.material.emissive = new THREE.Color('#00bfff');
+              mesh.material.emissiveIntensity = 0.5;
+              setHovered(mesh.name);
+            }}
+            onPointerOut={(e) => {
+              e.stopPropagation();
+              mesh.material.emissiveIntensity = 0;
+              setHovered(null);
+            }}
+            onClick={(e) => {
+              e.stopPropagation();
+              onPartClick(mesh);
+            }}
+          />
+        ))
+      ) : (
+        <primitive object={gltf.scene} scale={1.5} />
+      )}
+    </>
+  );
 }
 
 export default function ModelViewer() {
   const [selectedPart, setSelectedPart] = useState(null);
   const [exploded, setExploded] = useState(false);
+  const [hoveredPart, setHoveredPart] = useState(null);
+
+  const modelPath = exploded
+    ? '/models/M115 ASM EXPLODED.glb'
+    : '/models/M115 ASM.glb';
 
   return (
     <div className="relative h-[600px] w-full bg-gray-900 rounded-xl shadow-md">
       <Canvas camera={{ position: [5, 5, 5], fov: 50 }}>
         <ambientLight intensity={0.6} />
         <Stage environment="city" intensity={0.6}>
-          <Model onPartClick={setSelectedPart} exploded={exploded} />
+          <Model
+            modelPath={modelPath}
+            isExploded={exploded}
+            onPartClick={setSelectedPart}
+            setHovered={setHoveredPart}
+          />
         </Stage>
         <OrbitControls enablePan enableZoom enableRotate />
       </Canvas>
