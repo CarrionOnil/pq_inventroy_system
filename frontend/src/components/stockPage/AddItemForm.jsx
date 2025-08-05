@@ -1,41 +1,34 @@
-import React, { useEffect, useState } from 'react';
-import CategorySelect from './CategorySelect';
+import React, { useEffect, useState } from "react";
+import CategorySelect from "./CategorySelect";
 
 const API_BASE = import.meta.env.VITE_API_BASE;
 
 export default function AddItemForm({ onClose, onSuccess, initialData }) {
   const [formData, setFormData] = useState({
-    name: '',
-    partId: '',
-    category: '',
-    quantity: '',
-    location: '',
-    barcode: '',
-    status: 'In Stock',
-    cost: '',
-    lot_number: '',
-    description: '',
-    bin_numbers: '',
-    supplier: '',
-    production_stage: '',
-    notes: '',
+    name: "",
+    partId: "",
+    category: "",
+    barcode: "",
+    status: "In Stock",
+    cost: "",
+    lot_number: "",
+    description: "",
+    bin_numbers: "",
+    supplier: "",
+    production_stage: "",
+    notes: "",
     image: null,
     file: null,
+    locations: [{ location_id: "", quantity: "" }],
   });
 
-  const [locations, setLocations] = useState([]);
+  const [locationsList, setLocationsList] = useState([]);
 
   useEffect(() => {
-    const fetchLocations = async () => {
-      try {
-        const res = await fetch(`${API_BASE}/locations`);
-        const data = await res.json();
-        setLocations(data);
-      } catch (err) {
-        console.error("Failed to fetch locations:", err);
-      }
-    };
-    fetchLocations();
+    fetch(`${API_BASE}/locations`)
+      .then((res) => res.json())
+      .then(setLocationsList)
+      .catch((err) => console.error("Failed to fetch locations:", err));
   }, []);
 
   useEffect(() => {
@@ -45,6 +38,7 @@ export default function AddItemForm({ onClose, onSuccess, initialData }) {
         ...initialData,
         image: null,
         file: null,
+        locations: initialData.locations || [{ location_id: "", quantity: "" }],
       }));
     }
   }, [initialData]);
@@ -63,25 +57,64 @@ export default function AddItemForm({ onClose, onSuccess, initialData }) {
     setFormData((prev) => ({ ...prev, [e.target.name]: file }));
   };
 
+  const handleLocationChange = (index, field, value) => {
+    const updated = [...formData.locations];
+    updated[index][field] = value;
+    setFormData((prev) => ({ ...prev, locations: updated }));
+  };
+
+  const addLocationRow = () => {
+    setFormData((prev) => ({
+      ...prev,
+      locations: [...prev.locations, { location_id: "", quantity: "" }],
+    }));
+  };
+
+  const removeLocationRow = (index) => {
+    setFormData((prev) => ({
+      ...prev,
+      locations: prev.locations.filter((_, i) => i !== index),
+    }));
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    const validLocations = formData.locations.filter(
+      (loc) => loc.location_id && loc.quantity
+    );
+    if (!validLocations.length) {
+      alert("Please add at least one location with a quantity.");
+      return;
+    }
+
     const payload = new FormData();
     Object.entries(formData).forEach(([key, value]) => {
-      if (value !== null && value !== undefined) {
+      if (["image", "file"].includes(key)) {
+        if (value) payload.append(key, value);
+      } else if (key !== "locations") {
         payload.append(key, value);
       }
     });
 
+    if (initialData) {
+      // PUT expects JSON locations
+      payload.append("locations", JSON.stringify(validLocations));
+    } else {
+      // POST expects separate arrays
+      validLocations.forEach((loc) => {
+        payload.append("locations", loc.location_id);
+        payload.append("quantities", loc.quantity);
+      });
+    }
+
     try {
-      const method = initialData ? 'PUT' : 'POST';
+      const method = initialData ? "PUT" : "POST";
       const endpoint = initialData
         ? `${API_BASE}/stock/${initialData.id}`
         : `${API_BASE}/stock`;
 
-      await fetch(endpoint, {
-        method,
-        body: payload,
-      });
+      await fetch(endpoint, { method, body: payload });
 
       onSuccess();
       onClose();
@@ -93,57 +126,58 @@ export default function AddItemForm({ onClose, onSuccess, initialData }) {
   return (
     <form onSubmit={handleSubmit} className="p-4 bg-gray-800 border rounded-lg space-y-6">
       <div className="grid grid-cols-2 gap-4">
+        {/* Basic Info */}
         <input name="name" placeholder="Name" value={formData.name} onChange={handleInputChange} className="border px-3 py-2 rounded-md text-black" />
         <input name="partId" placeholder="Part ID" value={formData.partId} onChange={handleInputChange} className="border px-3 py-2 rounded-md text-black" />
-
         <CategorySelect value={formData.category} onChange={handleCategoryChange} />
-
-        <input name="quantity" type="number" placeholder="Quantity" value={formData.quantity} onChange={handleInputChange} className="border px-3 py-2 rounded-md text-black" />
-
-        <select name="location" value={formData.location} onChange={handleInputChange} required className="border px-3 py-2 rounded-md text-black">
-          <option value="">Select Location</option>
-          {locations.map((loc) => (
-            <option key={loc.id} value={loc.name}>{loc.name}</option>
-          ))}
-        </select>
-
-        <input name="cost" type="number" placeholder="Cost to Make" value={formData.cost} onChange={handleInputChange} className="border px-3 py-2 rounded-md text-black" />
         <input name="barcode" placeholder="Barcode" value={formData.barcode} onChange={handleInputChange} className="border px-3 py-2 rounded-md text-black" />
+        <input name="cost" type="number" placeholder="Cost to Make" value={formData.cost} onChange={handleInputChange} className="border px-3 py-2 rounded-md text-black" />
         <input name="lot_number" placeholder="Lot #" value={formData.lot_number} onChange={handleInputChange} className="border px-3 py-2 rounded-md text-black" />
-
         <textarea name="description" placeholder="Description" value={formData.description} onChange={handleInputChange} className="border px-3 py-2 rounded-md text-black col-span-2" />
-
         <select name="status" value={formData.status} onChange={handleInputChange} className="border px-3 py-2 rounded-md text-black col-span-2">
           <option value="In Stock">In Stock</option>
           <option value="Low Stock">Low Stock</option>
           <option value="Out of Stock">Out of Stock</option>
         </select>
-
         <input name="bin_numbers" placeholder="Aisle #" value={formData.bin_numbers} onChange={handleInputChange} className="border px-3 py-2 rounded-md text-black" />
         <input name="supplier" placeholder="Supplier" value={formData.supplier} onChange={handleInputChange} className="border px-3 py-2 rounded-md text-black" />
         <input name="production_stage" placeholder="Production Stage" value={formData.production_stage} onChange={handleInputChange} className="border px-3 py-2 rounded-md text-black" />
         <input name="notes" placeholder="Notes/Comments" value={formData.notes} onChange={handleInputChange} className="border px-3 py-2 rounded-md text-black col-span-2" />
 
-        <div className="col-span-1">
-          <label className="text-sm text-white mb-1 block">Item Image</label>
-          <input type="file" name="image" accept="image/*" onChange={handleFileChange} className="block w-full text-white file:mr-4 file:py-2 file:px-4 file:border-0 file:rounded-md file:bg-blue-600 file:text-white hover:file:bg-blue-700" />
-          {formData.image && <img src={URL.createObjectURL(formData.image)} alt="Preview" className="mt-2 h-24 rounded-md" />}
+        {/* Location Rows */}
+        <div className="col-span-2 space-y-2">
+          <label className="text-white font-medium">Locations & Quantities</label>
+          {formData.locations.map((loc, idx) => (
+            <div key={idx} className="flex gap-2">
+              <select value={loc.location_id} onChange={(e) => handleLocationChange(idx, "location_id", e.target.value)} className="border px-3 py-2 rounded-md text-black flex-1">
+                <option value="">Select Location</option>
+                {locationsList.map((l) => (
+                  <option key={l.id} value={l.id}>{l.name}</option>
+                ))}
+              </select>
+              <input type="number" placeholder="Quantity" value={loc.quantity} onChange={(e) => handleLocationChange(idx, "quantity", e.target.value)} className="border px-3 py-2 rounded-md text-black w-28" />
+              {formData.locations.length > 1 && (
+                <button type="button" onClick={() => removeLocationRow(idx)} className="px-3 py-2 bg-red-600 text-white rounded-md">×</button>
+              )}
+            </div>
+          ))}
+          <button type="button" onClick={addLocationRow} className="mt-2 px-3 py-1 bg-blue-600 text-white rounded-md">+ Add Location</button>
         </div>
 
-        <div className="col-span-1">
+        {/* Files */}
+        <div>
+          <label className="text-sm text-white mb-1 block">Item Image</label>
+          <input type="file" name="image" accept="image/*" onChange={handleFileChange} className="block w-full text-white file:bg-blue-600" />
+        </div>
+        <div>
           <label className="text-sm text-white mb-1 block">Attachment (PDF)</label>
-          <input type="file" name="file" accept=".pdf" onChange={handleFileChange} className="block w-full text-white file:mr-4 file:py-2 file:px-4 file:border-0 file:rounded-md file:bg-gray-600 file:text-white hover:file:bg-gray-700" />
-          {formData.file && <p className="text-xs text-green-400 mt-1">{formData.file.name}</p>}
+          <input type="file" name="file" accept=".pdf" onChange={handleFileChange} className="block w-full text-white file:bg-gray-600" />
         </div>
       </div>
 
       <div className="flex gap-4 mt-4">
-        <button type="submit" className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700">
-          {initialData ? 'Update' : 'Save'}
-        </button>
-        <button type="button" onClick={onClose} className="px-4 py-2 border rounded-md hover:bg-gray-700">
-          Cancel
-        </button>
+        <button type="submit" className="px-4 py-2 bg-green-600 text-white rounded-md">{initialData ? "Update" : "Save"}</button>
+        <button type="button" onClick={onClose} className="px-4 py-2 border rounded-md">Cancel</button>
       </div>
     </form>
   );

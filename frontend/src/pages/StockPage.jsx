@@ -1,9 +1,11 @@
 import React, { useEffect, useState } from 'react';
-import { Search, Filter, Plus, Download } from 'lucide-react';
+import { Filter, Plus, Download } from 'lucide-react';
 import AddItemForm from '../components/stockPage/AddItemForm';
 import StockSearchFilter from '../components/stockPage/StockSearchFilter';
 import StockItemWidget from '../components/stockPage/StockItemWidget';
 import ItemDetailsModal from '../components/stockPage/ItemDetailsModal';
+
+const API_BASE = import.meta.env.VITE_API_BASE;
 
 const StockPage = () => {
   const [stockItems, setStockItems] = useState([]);
@@ -15,7 +17,7 @@ const StockPage = () => {
 
   const [filters, setFilters] = useState({
     query: '',
-    category: [],
+    category: '',
     status: '',
     location: '',
   });
@@ -35,15 +37,13 @@ const StockPage = () => {
       if (filters.query) params.append('search', filters.query);
       if (filters.status) params.append('status', filters.status);
       if (filters.location) params.append('location', filters.location);
-      if (filters.category.length > 0) {
-        params.append('category', filters.category.join(','));
-      }
+      if (filters.category) params.append('category', filters.category);
 
-      const res = await fetch(`http://localhost:8000/stock?${params.toString()}`);
+      const res = await fetch(`${API_BASE}/stock?${params.toString()}`);
       const data = await res.json();
       setStockItems(data);
     } catch (error) {
-      console.error("Failed to fetch stock:", error);
+      console.error('Failed to fetch stock:', error);
     }
   };
 
@@ -53,10 +53,10 @@ const StockPage = () => {
 
   const handleDelete = async (id) => {
     try {
-      await fetch(`http://localhost:8000/stock/${id}`, { method: 'DELETE' });
+      await fetch(`${API_BASE}/stock/${id}`, { method: 'DELETE' });
       fetchStock();
     } catch (err) {
-      console.error("Delete failed:", err);
+      console.error('Delete failed:', err);
     }
   };
 
@@ -105,7 +105,7 @@ const StockPage = () => {
         />
         <button
           className="flex items-center gap-1 px-4 py-2 border rounded-md hover:bg-gray-100"
-          onClick={() => setShowFilters(prev => !prev)}
+          onClick={() => setShowFilters((prev) => !prev)}
         >
           <Filter className="w-4 h-4" />
           Filters
@@ -142,6 +142,7 @@ const StockPage = () => {
         />
       )}
 
+      {/* View Item Details */}
       <ItemDetailsModal
         isOpen={!!viewItem}
         item={viewItem}
@@ -159,11 +160,14 @@ const StockPage = () => {
           <StockItemWidget
             key={item.id}
             item={item}
+            selectedLocation={filters.location}
             onClick={() => handleView(item)}
           />
         ))}
         {stockItems.length === 0 && (
-          <p className="text-gray-400 text-center col-span-full">No stock items found.</p>
+          <p className="text-gray-400 text-center col-span-full">
+            No stock items found.
+          </p>
         )}
       </div>
     </div>

@@ -37,8 +37,20 @@ cd ../backend
 pip install -r requirements.txt
 
 start the Backend Server:
-uvicorn main:app --reload
+source venv/Scripts/activate
+
+uvicorn app.main:app --reload --port 8000
 
 Start the Frontend:
 cd ../frontend
 npm run dev
+
+
+Personal note:
+
+I have two repos a personal one (for my portfolio) and a company one. When pushing to personal main follow up with:
+
+git fetch personal
+git checkout main
+git reset --hard personal/main
+git push company main --force
