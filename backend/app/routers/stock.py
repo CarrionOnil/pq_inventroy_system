@@ -89,6 +89,7 @@ async def create_stock(
     category: str = Form(...),
     barcode: str = Form(...),
     status: str = Form(...),
+    cost: Optional[float] = Form(None),
     locations: List[int] = Form(...),
     quantities: List[int] = Form(...),
     lot_number: Optional[str] = Form(None),
@@ -99,6 +100,8 @@ async def create_stock(
     image: Optional[UploadFile] = File(None),
     file: Optional[UploadFile] = File(None)
 ):
+    print("COST RECEIVED:", cost, type(cost))  # <-- debug line
+
     if not locations or not quantities or len(locations) != len(quantities):
         raise HTTPException(status_code=400, detail="Locations and quantities are required and must match.")
 
@@ -114,6 +117,7 @@ async def create_stock(
         category=category,
         barcode=barcode,
         status=status,
+        cost=cost, 
         lot_number=lot_number,
         bin_numbers=bin_numbers,
         supplier=supplier,

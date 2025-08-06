@@ -1,3 +1,5 @@
+# schemas.py
+
 from pydantic import BaseModel
 from typing import Optional, List
 
@@ -10,7 +12,6 @@ class StockLocationCreate(StockLocationBase):
     pass
 
 class StockLocationResponse(StockLocationBase):
-    # This allows the API to send back location names too if needed
     location_name: Optional[str] = None
 
 # ---------- CREATE ----------
@@ -25,6 +26,7 @@ class StockCreate(BaseModel):
     supplier: Optional[str] = None
     production_stage: Optional[str] = None
     notes: Optional[str] = None
+    cost: Optional[float] = 0.0  # ✅ Added cost field
     locations: List[StockLocationCreate]
 
 # ---------- RESPONSE ----------
@@ -43,4 +45,5 @@ class StockResponse(BaseModel):
     notes: Optional[str]
     image_url: Optional[str]
     file_url: Optional[str]
+    cost: Optional[float] = 0.0 
     locations: List[StockLocationResponse]

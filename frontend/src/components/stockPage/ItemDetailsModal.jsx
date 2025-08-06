@@ -78,7 +78,7 @@ const ItemDetailsModal = ({ isOpen, onClose, item, onEdit }) => {
               <div className="space-y-1 text-sm text-gray-700">
                 <p><strong>Scrapped:</strong> {item.scrap_count || 0}</p>
                 <p><strong>Category:</strong> {item.category}</p>
-                <p><strong>Cost to Make:</strong> ${item.cost_to_make || '0.00'}</p>
+                <p><strong>Cost to Make:</strong> ${item.cost ?? '0.00'}</p>
                 <p><strong>Barcode:</strong> {item.barcode}</p>
               </div>
               <div className="mt-4">

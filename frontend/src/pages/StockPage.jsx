@@ -41,6 +41,12 @@ const StockPage = () => {
 
       const res = await fetch(`${API_BASE}/stock?${params.toString()}`);
       const data = await res.json();
+
+      // const mappedData = data.map(item => ({
+      //   ...item,
+      //   cost: item.cost ?? item.cost_to_make ?? 0
+      // }));
+
       setStockItems(data);
     } catch (error) {
       console.error('Failed to fetch stock:', error);

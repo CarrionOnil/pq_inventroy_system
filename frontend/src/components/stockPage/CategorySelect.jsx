@@ -33,6 +33,10 @@ export default function CategorySelect({ value, onChange }) {
       });
 
       if (!res.ok) throw new Error('Failed to add category');
+
+      // Automatically select the new category
+      onChange(newCategory);
+
       setNewCategory('');
       setNewColor('#000000');
       fetchCategories();
@@ -72,6 +76,7 @@ export default function CategorySelect({ value, onChange }) {
           className="w-10 h-10 border rounded"
         />
         <button
+          type="button" // Prevents form submission
           onClick={addCategory}
           className="bg-blue-600 text-white px-3 py-2 rounded-md hover:bg-blue-700"
         >

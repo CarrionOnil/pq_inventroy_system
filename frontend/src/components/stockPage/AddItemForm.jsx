@@ -77,51 +77,64 @@ export default function AddItemForm({ onClose, onSuccess, initialData }) {
     }));
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+const handleSubmit = async (e) => {
+  e.preventDefault();
 
-    const validLocations = formData.locations.filter(
-      (loc) => loc.location_id && loc.quantity
-    );
-    if (!validLocations.length) {
-      alert("Please add at least one location with a quantity.");
-      return;
-    }
+  const validLocations = formData.locations.filter(
+    (loc) => loc.location_id && loc.quantity
+  );
+  if (!validLocations.length) {
+    alert("Please add at least one location with a quantity.");
+    return;
+  }
 
-    const payload = new FormData();
-    Object.entries(formData).forEach(([key, value]) => {
-      if (["image", "file"].includes(key)) {
-        if (value) payload.append(key, value);
-      } else if (key !== "locations") {
-        payload.append(key, value);
-      }
-    });
-
+  try {
     if (initialData) {
-      // PUT expects JSON locations
-      payload.append("locations", JSON.stringify(validLocations));
+      //  Use JSON for update
+      const jsonPayload = {
+        ...formData,
+        cost: formData.cost !== "" ? parseFloat(formData.cost) : 0,
+        locations: validLocations.map((loc) => ({
+          location_id: parseInt(loc.location_id),
+          quantity: parseInt(loc.quantity),
+        })),
+      };
+
+      await fetch(`${API_BASE}/stock/${initialData.id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(jsonPayload),
+      });
     } else {
-      // POST expects separate arrays
+      //  Use FormData for create
+      const payload = new FormData();
+      Object.entries(formData).forEach(([key, value]) => {
+        if (["image", "file"].includes(key)) {
+          if (value) payload.append(key, value);
+        } else if (key !== "locations") {
+          if (key === "cost" && value !== "") {
+            payload.append(key, parseFloat(value));
+          } else {
+            payload.append(key, value);
+          }
+        }
+      });
+
       validLocations.forEach((loc) => {
         payload.append("locations", loc.location_id);
         payload.append("quantities", loc.quantity);
       });
+
+      await fetch(`${API_BASE}/stock`, { method: "POST", body: payload });
     }
 
-    try {
-      const method = initialData ? "PUT" : "POST";
-      const endpoint = initialData
-        ? `${API_BASE}/stock/${initialData.id}`
-        : `${API_BASE}/stock`;
+    onSuccess();
+    onClose();
+  } catch (err) {
+    console.error("Failed to submit stock item:", err);
+  }
+};
 
-      await fetch(endpoint, { method, body: payload });
-
-      onSuccess();
-      onClose();
-    } catch (err) {
-      console.error("Failed to submit stock item:", err);
-    }
-  };
 
   return (
     <form onSubmit={handleSubmit} className="p-4 bg-gray-800 border rounded-lg space-y-6">

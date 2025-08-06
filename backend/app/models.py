@@ -1,3 +1,5 @@
+# models.py
+
 from pydantic import BaseModel
 from typing import Optional, List
 
@@ -17,6 +19,7 @@ class Stock(BaseModel):
     notes: Optional[str] = None
     image_url: Optional[str] = None
     file_url: Optional[str] = None
+    cost: Optional[float] = 0.0  # ✅ Added cost field
 
 # Location model
 class Location(BaseModel):
