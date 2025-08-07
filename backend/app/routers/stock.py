@@ -5,10 +5,9 @@ import shutil, uuid
 from datetime import datetime
 
 from app.models import Stock, StockLocation
-from app.schemas import StockCreate, StockResponse, StockLocationCreate
+from app.schemas import StockCreate, StockResponse, StockLocationCreate, TransferRequest
 from app.routers.logs import stock_logs, StockLog
 from app.routers.bom import boms
-from app.routers.locations import fake_locations
 
 router = APIRouter()
 
@@ -22,15 +21,10 @@ UPLOAD_DIR = Path("app/uploads")
 
 # ---------- GET STOCK ----------
 @router.get("/stock", response_model=List[StockResponse])
-def get_stock(
-    status: Optional[str] = None,
-    location: Optional[str] = None,  # string so we can handle name or id
-    category: Optional[str] = Query(None),
-    search: Optional[str] = Query(None)
-):
+def get_stock(status: Optional[str] = None, location: Optional[str] = None, category: Optional[str] = Query(None), search: Optional[str] = Query(None)):
+    from app.routers.locations import fake_locations
     stock_with_locations = []
     for s in fake_stock:
-        # Build enriched location data with names
         enriched_locations = []
         for loc in fake_stock_locations:
             if loc.stock_id == s.id:
@@ -43,40 +37,25 @@ def get_stock(
 
         total_qty = sum(loc["quantity"] for loc in enriched_locations)
 
-        # Location filter — keep item if it has at least one matching location
         if location:
-            matched = [
-                loc for loc in enriched_locations
-                if str(loc["location_id"]) == str(location) or
-                   (loc["location_name"] and loc["location_name"].lower() == location.lower())
-            ]
+            matched = [loc for loc in enriched_locations if str(loc["location_id"]) == str(location) or (loc["location_name"] and loc["location_name"].lower() == location.lower())]
             if not matched:
-                continue  # skip if no matching location
+                continue
 
-        # Status filter (uses total_qty across all locations)
         if status:
             def get_status(qty):
-                if qty == 0:
-                    return "Out of Stock"
-                elif qty < 10:
-                    return "Low Stock"
+                if qty == 0: return "Out of Stock"
+                elif qty < 10: return "Low Stock"
                 return "In Stock"
             if get_status(total_qty) != status:
                 continue
 
-        # Category filter
         if category and s.category not in category.split(","):
             continue
 
-        # Search filter
-        if search and not (
-            search.lower() in s.name.lower() or
-            search.lower() in s.partId.lower() or
-            search.lower() in s.barcode.lower()
-        ):
+        if search and not (search.lower() in s.name.lower() or search.lower() in s.partId.lower() or search.lower() in s.barcode.lower()):
             continue
 
-        # Always return all locations so totals work in the widget
         stock_with_locations.append({**s.dict(), "locations": enriched_locations})
 
     return stock_with_locations
@@ -84,23 +63,14 @@ def get_stock(
 # ---------- CREATE STOCK ----------
 @router.post("/stock", response_model=StockResponse)
 async def create_stock(
-    name: str = Form(...),
-    partId: str = Form(...),
-    category: str = Form(...),
-    barcode: str = Form(...),
-    status: str = Form(...),
-    cost: Optional[float] = Form(None),
-    locations: List[int] = Form(...),
-    quantities: List[int] = Form(...),
-    lot_number: Optional[str] = Form(None),
-    bin_numbers: Optional[str] = Form(None),
-    supplier: Optional[str] = Form(None),
-    production_stage: Optional[str] = Form(None),
-    notes: Optional[str] = Form(None),
-    image: Optional[UploadFile] = File(None),
-    file: Optional[UploadFile] = File(None)
+    name: str = Form(...), partId: str = Form(...), category: str = Form(...), barcode: str = Form(...),
+    status: str = Form(...), cost: Optional[float] = Form(None),
+    locations: List[int] = Form(...), quantities: List[int] = Form(...),
+    lot_number: Optional[str] = Form(None), bin_numbers: Optional[str] = Form(None),
+    supplier: Optional[str] = Form(None), production_stage: Optional[str] = Form(None),
+    notes: Optional[str] = Form(None), image: Optional[UploadFile] = File(None), file: Optional[UploadFile] = File(None)
 ):
-    print("COST RECEIVED:", cost, type(cost))  # <-- debug line
+    from app.routers.locations import fake_locations
 
     if not locations or not quantities or len(locations) != len(quantities):
         raise HTTPException(status_code=400, detail="Locations and quantities are required and must match.")
@@ -111,18 +81,9 @@ async def create_stock(
 
     new_id = (max([i.id or 0 for i in fake_stock]) + 1) if fake_stock else 1
     stock_item = Stock(
-        id=new_id,
-        name=name,
-        partId=partId,
-        category=category,
-        barcode=barcode,
-        status=status,
-        cost=cost, 
-        lot_number=lot_number,
-        bin_numbers=bin_numbers,
-        supplier=supplier,
-        production_stage=production_stage,
-        notes=notes
+        id=new_id, name=name, partId=partId, category=category, barcode=barcode, status=status,
+        cost=cost, lot_number=lot_number, bin_numbers=bin_numbers,
+        supplier=supplier, production_stage=production_stage, notes=notes
     )
 
     if image:
@@ -140,11 +101,7 @@ async def create_stock(
     fake_stock.append(stock_item)
 
     for loc_id, qty in zip(locations, quantities):
-        fake_stock_locations.append(StockLocation(
-            stock_id=new_id,
-            location_id=loc_id,
-            quantity=qty
-        ))
+        fake_stock_locations.append(StockLocation(stock_id=new_id, location_id=loc_id, quantity=qty))
 
     bom = next((b for b in boms if b.product_barcode == barcode), None)
     if bom:
@@ -158,24 +115,12 @@ async def create_stock(
                     take = min(l.quantity, required)
                     l.quantity -= take
                     required -= take
-            stock_logs.append(StockLog(
-                timestamp=datetime.utcnow(),
-                action="consume",
-                barcode=comp.barcode,
-                amount=qty_each * sum(quantities),
-                resulting_qty=sum(l.quantity for l in fake_stock_locations if l.stock_id == comp.id),
-                details={"used_for": barcode}
-            ))
+            stock_logs.append(StockLog(timestamp=datetime.utcnow(), action="consume", barcode=comp.barcode, amount=qty_each * sum(quantities), resulting_qty=sum(l.quantity for l in fake_stock_locations if l.stock_id == comp.id), details={"used_for": barcode}))
 
-    stock_logs.append(StockLog(
-        timestamp=datetime.utcnow(),
-        action="create",
-        barcode=stock_item.barcode,
-        amount=sum(quantities),
-        resulting_qty=sum(quantities)
-    ))
+    stock_logs.append(StockLog(timestamp=datetime.utcnow(), action="create", barcode=stock_item.barcode, amount=sum(quantities), resulting_qty=sum(quantities)))
 
     return {**stock_item.dict(), "locations": [StockLocationCreate(location_id=loc_id, quantity=qty) for loc_id, qty in zip(locations, quantities)]}
+
 
 # ---------- UPDATE STOCK ----------
 @router.put("/stock/{item_id}", response_model=StockResponse)
@@ -299,3 +244,61 @@ def scan_update(request: ScanUpdateRequest):
     ))
 
     return {"message": "Stock updated", "item": stock_item}
+
+
+@router.post("/stock/transfer")
+def transfer_item(data: TransferRequest):
+    if data.location_id == data.to_location_id:
+        raise HTTPException(status_code=400, detail="Source and destination locations must be different")
+
+    # Find source entry
+    from_entry = next((l for l in fake_stock_locations if l.location_id == data.location_id and l.stock_id == data.stock_id), None)
+    if not from_entry:
+        raise HTTPException(status_code=404, detail="Stock item not found in source location")
+
+    if data.quantity <= 0 or from_entry.quantity < data.quantity:
+        raise HTTPException(status_code=400, detail="Invalid transfer quantity")
+
+    # Deduct from source
+    from_entry.quantity -= data.quantity
+
+    # Add to destination (or create if missing)
+    to_entry = next((l for l in fake_stock_locations if l.location_id == data.to_location_id and l.stock_id == data.stock_id), None)
+    if to_entry:
+        to_entry.quantity += data.quantity
+    else:
+        to_entry = StockLocation(stock_id=data.stock_id, location_id=data.to_location_id, quantity=data.quantity)
+        fake_stock_locations.append(to_entry)
+
+    stock_item = next(s for s in fake_stock if s.id == data.stock_id)
+
+    # Log transfer - FROM
+    stock_logs.append(StockLog(
+        timestamp=datetime.utcnow(),
+        action="transfer_from",
+        barcode=stock_item.barcode,
+        amount=-data.quantity,
+        resulting_qty=from_entry.quantity,
+        details={
+            "from_location": data.location_id,
+            "to_location": data.to_location_id,
+            "reason": data.reason
+        }
+    ))
+
+    # Log transfer - TO
+    stock_logs.append(StockLog(
+        timestamp=datetime.utcnow(),
+        action="transfer_to",
+        barcode=stock_item.barcode,
+        amount=data.quantity,
+        resulting_qty=to_entry.quantity,
+        details={
+            "from_location": data.location_id,
+            "to_location": data.to_location_id,
+            "reason": data.reason
+        }
+    ))
+
+    return {"message": "Transfer completed", "item": stock_item}
+

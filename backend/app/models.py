@@ -19,7 +19,7 @@ class Stock(BaseModel):
     notes: Optional[str] = None
     image_url: Optional[str] = None
     file_url: Optional[str] = None
-    cost: Optional[float] = 0.0  # ✅ Added cost field
+    cost: Optional[float] = 0.0  
 
 # Location model
 class Location(BaseModel):

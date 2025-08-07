@@ -16,7 +16,7 @@ function Model({ modelPath, isExploded, onPartClick, setHovered }) {
         console.log(`Mesh ${meshCount}: ${child.name}`, child);
       }
     });
-    console.log(`🧩 Total mesh parts: ${meshCount}`);
+    console.log(`Total mesh parts: ${meshCount}`);
   }, [gltf, modelPath]);
 
   const parts = useMemo(() => {

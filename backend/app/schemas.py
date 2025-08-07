@@ -26,7 +26,7 @@ class StockCreate(BaseModel):
     supplier: Optional[str] = None
     production_stage: Optional[str] = None
     notes: Optional[str] = None
-    cost: Optional[float] = 0.0  # ✅ Added cost field
+    cost: Optional[float] = 0.0  # Added cost field
     locations: List[StockLocationCreate]
 
 # ---------- RESPONSE ----------
@@ -47,3 +47,9 @@ class StockResponse(BaseModel):
     file_url: Optional[str]
     cost: Optional[float] = 0.0 
     locations: List[StockLocationResponse]
+
+# ---------- TRANSFER ----------
+class TransferRequest(StockLocationCreate):
+    stock_id: int
+    to_location_id: int
+    reason: Optional[str] = "Internal transfer"
