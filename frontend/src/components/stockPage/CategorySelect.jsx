@@ -47,7 +47,6 @@ export default function CategorySelect({ value, onChange }) {
 
   return (
     <div className="col-span-2 space-y-2">
-      <label className="text-white">Category</label>
       <select
         value={value}
         onChange={(e) => onChange(e.target.value)}

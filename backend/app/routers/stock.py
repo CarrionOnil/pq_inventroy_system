@@ -125,6 +125,7 @@ async def create_stock(
 # ---------- UPDATE STOCK ----------
 @router.put("/stock/{item_id}", response_model=StockResponse)
 async def update_stock(item_id: int, stock_data: StockCreate):
+    from app.routers.locations import fake_locations #added (migh not work)
     stock_item = next((s for s in fake_stock if s.id == item_id), None)
     if not stock_item:
         raise HTTPException(status_code=404, detail="Item not found")
@@ -183,11 +184,12 @@ async def delete_stock(item_id: int):
 
 # ---------- SCRAP STOCK ----------
 class ScrapRequest(StockLocationCreate):
+    stock_id: int
     reason: Optional[str] = "No reason provided"
 
 @router.post("/stock/scrap")
 def scrap_item(data: ScrapRequest):
-    loc_entry = next((l for l in fake_stock_locations if l.location_id == data.location_id), None)
+    loc_entry = next((l for l in fake_stock_locations if l.location_id == data.location_id and l.stock_id == data.stock_id), None)
     if not loc_entry:
         raise HTTPException(status_code=404, detail="Stock item in this location not found")
 
@@ -216,7 +218,7 @@ class ScanUpdateRequest(StockLocationCreate):
 
 @router.post("/scan")
 def scan_update(request: ScanUpdateRequest):
-    loc_entry = next((l for l in fake_stock_locations if l.location_id == request.location_id), None)
+    loc_entry = next((l for l in fake_stock_locations if l.location_id == request.location_id and l.stock_id == request.stock_id), None)
     if not loc_entry:
         raise HTTPException(status_code=404, detail="Stock item in this location not found")
 
